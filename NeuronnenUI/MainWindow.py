@@ -1,84 +1,57 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import sys
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
+# coding:utf-8
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-import NeuronenUI
+import ConnectionView as cc
+import PlotView as pv
 
 
-class MyWindow(QMainWindow, NeuronenUI.Ui_MainWindow):
+class MainWindow(QMainWindow):
     def __init__(self):
-        super(MyWindow, self).__init__()
-        self.setupUi(self)
-        self.init_tabwidget()
-        self.init_toolbox()
+        super(MainWindow, self).__init__()
+        self.resize(1280, 800)
+        mainwidget = QWidget()
+        self.setCentralWidget(mainwidget)
+        hbox_1 = QHBoxLayout(mainwidget)
 
-    def init_tabwidget(self):
-        self.figure = plt.figure()
-        # use matplot as a widget
-        self.canvas = FigureCanvasQTAgg(self.figure)
-        toolbar = NavigationToolbar2QT(self.canvas, self)
-        layout = QVBoxLayout(self.tab_2)
-        layout.addWidget(self.canvas)
-        layout.addWidget(toolbar)
+        tabwidget = QTabWidget()
+        self.tab1 = cc.NeuralConnectionView()
+        self.tab2 = pv.OutputGraphic()
+        # connect tab1 to tab2, in order to get the data from items of tab1
+        self.tab2.connectTo(self.tab1)
 
-        self.slot_matplot()
-        self.connect(self.pushButton, SIGNAL("clicked()"), self.slot_matplot)
+        tabwidget.addTab(self.tab1, "Connections")
+        tabwidget.addTab(self.tab2, "Graphics")
+        hbox_1.addWidget(tabwidget)
 
-    def slot_matplot(self):
-        a = self.doubleSpinBox.value()
-        b = self.doubleSpinBox_2.value()
-        c = self.doubleSpinBox_3.value()
+        vbox1 = QVBoxLayout()
+        groupBox = QGroupBox("Informations:")
+        vvbox = QVBoxLayout()
+        info = self.tab1.scene.info_stack
+        vvbox.addWidget(info)
+        groupBox.setLayout(vvbox)
 
-        x = np.arange(-5.0, 5.0, 0.001)
+        sim_button = QPushButton("Simulation")
+        sim_button.setFixedSize(240, 80)
+        groupBox.setMaximumWidth(240)
+        vbox1.addWidget(groupBox)
+        vbox1.addWidget(sim_button)
+        hbox_1.addLayout(vbox1)
 
-        def _f1(t):
-            return a * np.cos(b * np.pi * t) + c
+        self.connect(self.tab1.scene, SIGNAL("repaintSignal()"), self.tab2.slot_DrawPlot)
+        self.connect(sim_button, SIGNAL("clicked()"), self.slot_all)
 
-        def _f2(t):
-            return t ** a + b * t + c
-
-        ax = self.figure.add_subplot(211)
-        # discards the old graph
-        ax.hold(False)
-        ax.plot(x, _f1(x))
-
-        ax2 = self.figure.add_subplot(212)
-        ax2.hold(False)
-        ax2.plot(x, _f2(x))
-
-        self.canvas.draw()
-
-    def init_toolbox(self):
-
-        layout = QVBoxLayout(self.page)
-
-        icon_1 = self.icon("image/neuron.png")
-        # icon_2 = self.icon("image/neuron.png")
-        # icon_3 = self.icon("image/neuron.png")
-        # icon_4 = self.icon("image/neuron.png")
-
-        layout.addWidget(icon_1)
-        # layout.addWidget(icon_2)
-        # layout.addWidget(icon_3)
-        # layout.addWidget(icon_4)
-
-    def icon(self, path):
-        icon = QLabel()
-        pix = QPixmap(path).scaled(60,60)
-        icon.setFixedSize(pix.size())
-        icon.setPixmap(pix)
-        icon.setFrameStyle(QFrame.Panel|QFrame.Raised)
-        icon.setAlignment(Qt.AlignCenter)
-        return icon
+    def slot_all(self):
+        if self.tab1.scene.currentItem:
+            self.tab1.scene.currentItem.info.saveData()
+        self.tab2.slot_DrawPlot()
 
 
 if __name__ == '__main__':
+    import sys
+
     app = QApplication(sys.argv)
-    window = MyWindow()
+    window = MainWindow()
     window.show()
     sys.exit(app.exec_())
