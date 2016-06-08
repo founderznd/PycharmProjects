@@ -6,31 +6,15 @@ from PyQt4.QtGui import *
 import Informations as info
 
 
-class NeuralButton(QToolButton):
+class NeuronIcon(QToolButton):
     def __init__(self, pixname):
-        super(NeuralButton, self).__init__()
+        super(NeuronIcon, self).__init__()
         pix = QPixmap(pixname)
         icon = QIcon(pix)
         self.setFixedSize(100, 100)
         self.setIcon(icon)
         self.setIconSize(self.size())
         self.setAutoRaise(True)
-
-
-# class ItemInfoView(QGroupBox):
-#     def __init__(self):
-#         super(ItemInfoView, self).__init__()
-#         self.setTitle("Informations:")
-#
-#         self.layout = QFormLayout(self)
-#
-#         self.functionName = QLabel()
-#
-#     def setupInfo(self, d):
-#         for item in d.items():
-#             key = QLabel(str(item[0]))
-#             value = QLabel(str(item[1]))
-#             self.layout.addRow(key, value)
 
 
 class NeuralConnectionView(QWidget):
@@ -40,9 +24,9 @@ class NeuralConnectionView(QWidget):
         vbox = QVBoxLayout()
 
         vbox.addSpacing(20)
-        self.button1 = NeuralButton("image/neural.png")
+        self.button1 = NeuronIcon("image/neural.png")
         vbox.addWidget(self.button1)
-        self.button2 = NeuralButton("image/neural2.png")
+        self.button2 = NeuronIcon("image/neural2.png")
         vbox.addWidget(self.button2)
         vbox.addStretch()
 
@@ -54,31 +38,24 @@ class NeuralConnectionView(QWidget):
         view.setScene(self.scene)
         # set DragMode to ScrollHandDrag
         view.setDragMode(QGraphicsView.ScrollHandDrag)
-        self.connect(self.button1, SIGNAL("clicked()"), self.slotAddNeural1)
+        self.connect(self.button1, SIGNAL("clicked()"), self.slotAddNeuron)
+        self.connect(self.scene, SIGNAL("selectedItem(int)"), self.slotChangeStack)
 
-        self.connect(self.scene, SIGNAL("activated(int)"), self.slot_test)
-
-    def slotAddNeural1(self):
-        item = ItemOne()
+    def slotAddNeuron(self):
+        item = Population()
         self.scene.addItem(item)
         self.scene.info_stack.addWidget(item.info)
 
     def getItemData(self):
         return self.scene.item_data
 
-    def slot_test(self, i):
-        # print self.scene.currentItem
-        # print "index = ", len(self.scene.items()) - i - 1 - len(self.scene.edgelist)
-        # if self.scene.currentItem:
-        #     print self.scene.info_stack.indexOf(self.scene.currentItem.info)
-        # else:
-        #     print None
-        self.scene.info_stack.setCurrentIndex(len(self.scene.items()) - i - 1 - len(self.scene.edgelist))
+    def slotChangeStack(self, i):
+        self.scene.info_stack.setCurrentIndex(len(self.scene.items()) - len(self.scene.edgelist) - i - 1)
 
 
 class MyScene(QGraphicsScene):
-    repaintSignal = pyqtSignal()
-    activated = pyqtSignal(int)
+    replot = pyqtSignal()
+    selectedItem = pyqtSignal(int)
 
     def __init__(self):
         super(MyScene, self).__init__()
@@ -132,11 +109,11 @@ class MyScene(QGraphicsScene):
             # emit a Signal with the index of currentItem
             index = self.getCurrentIndex()
             if index != -1:
-                self.activated.emit(index)
-            # show info on right
+                self.selectedItem.emit(index)
+            # show info of currentItem
             if e.button() == Qt.LeftButton and self.currentItem.type() == 1:
                 self.item_data = self.currentItem.info.data
-                self.repaintSignal.emit()
+                self.replot.emit()
             if e.button() == Qt.RightButton:
                 self.source = self.currentItem
 
@@ -148,7 +125,7 @@ class MyScene(QGraphicsScene):
             if self.source is not self.dest:
                 self.addEdge()
 
-    # delete item when press "del" on keyboard
+    # delete currentItem when press "del" on keyboard
     def keyPressEvent(self, e):
         self.update()
         if e.key() == Qt.Key_Delete and self.currentItem:
@@ -157,7 +134,7 @@ class MyScene(QGraphicsScene):
                 self.info_stack.removeWidget(self.currentItem.info)
                 self.removeItem(self.currentItem)
                 self.currentItem = None
-                self.repaintSignal.emit()
+                self.replot.emit()
 
 
 class Edge(QGraphicsItem):
@@ -203,9 +180,9 @@ class Edge(QGraphicsItem):
         QPainter.drawLine(self.sourcePoint, self.destPoint)
 
 
-class ItemOne(QGraphicsItem):
+class Population(QGraphicsItem):
     def __init__(self):
-        super(ItemOne, self).__init__()
+        super(Population, self).__init__()
         self.pix = QPixmap("image/neural.png")
         self.setScale(0.2)
         self.setFlag(QGraphicsItem.ItemIsMovable)
@@ -213,7 +190,7 @@ class ItemOne(QGraphicsItem):
         # make sure items alway above edges
         self.setZValue(1)
 
-        self.info = info.Parameters()
+        self.info = info.ParameterStack()
 
     def type(self):
         return 1
@@ -226,6 +203,6 @@ class ItemOne(QGraphicsItem):
 
     # setup parameters in a QDialog and return them to info.parameterDict
     def mouseDoubleClickEvent(self, e):
-        super(ItemOne, self).mouseDoubleClickEvent(e)
+        super(Population, self).mouseDoubleClickEvent(e)
         if e.button() == Qt.LeftButton:
             self.info.show()

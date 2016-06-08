@@ -6,100 +6,57 @@ from PyQt4.QtGui import *
 """ here defines all function Widgets """
 
 
-class NoFunction(QGroupBox):
+class ParameterStack(QWidget):
     def __init__(self):
-        super(NoFunction, self).__init__()
-        self.data = {}
-        self.setTitle("Parameters:")
-
-        layout = QGridLayout(self)
-        label = QLabel("No Data!")
-        label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(label)
-
-    def setData(self):
-        self.data["id"] = 0
-        self.data["name"] = "No Data!!"
-        return self.data
-
-
-class Function_1(QGroupBox):
-    def __init__(self):
-        super(Function_1, self).__init__()
-        self.data = {}
-        self.setTitle("Parameters:")
-
-        layout = QFormLayout(self)
-        self.formular = QLabel("y = a * x + b")
-        name1 = QLabel("a = ")
-        self.par1 = QDoubleSpinBox()
-        self.par1.setRange(-999.999, 999.999)
-        name2 = QLabel("b = ")
-        self.par2 = QDoubleSpinBox()
-        self.par2.setRange(-999.999, 999.999)
-        layout.addRow(self.formular)
-        layout.addRow(name1, self.par1)
-        layout.addRow(name2, self.par2)
-
-    def setData(self):
-        self.data["id"] = 1
-        self.data["name"] = self.formular.text()
-        self.data["par1"] = self.par1.value()
-        self.data["par2"] = self.par2.value()
-        return self.data
-
-
-class Function_2(QGroupBox):
-    def __init__(self):
-        super(Function_2, self).__init__()
-        self.data = {}
-        self.setTitle("Parameters:")
-
-        layout = QFormLayout(self)
-        self.formular = QLabel("y = a * x^2")
-        name1 = QLabel("a = ")
-        self.par1 = QDoubleSpinBox()
-        self.par1.setRange(-999.999, 999.999)
-
-        layout.addRow(self.formular)
-        layout.addRow(name1, self.par1)
-
-    def setData(self):
-        self.data["id"] = 2
-        self.data["name"] = self.formular.text()
-        self.data["par1"] = self.par1.value()
-        return self.data
-
-
-""" ################################################################## """
-
-
-class Parameters(QWidget):
-    def __init__(self):
-        super(Parameters, self).__init__()
+        super(ParameterStack, self).__init__()
         self.i = 0
         # all parameters will be saved in this dictionary
         self.data = {}
+        # geometry infos saved in this tuple
+        self.tuple = None
 
-        vbox = QVBoxLayout(self)
-        # vbox.addStretch()
+        vbox = QVBoxLayout()
+        vbox.addStretch()
 
-        combox = QComboBox()
-        combox.addItems(["none", "1", "2"])
-        vbox.addWidget(combox)
+        label = QLabel("Geometry")
+        label.setAlignment(Qt.AlignCenter)
+        label.setFrameStyle(QFrame.Box | QFrame.Sunken)
+        vbox.addWidget(label)
 
-        self.stackHub = QStackedWidget()
+        hbox = QHBoxLayout()
+        self.row = QSpinBox()
+        hbox.addWidget(QLabel("row:"))
+        hbox.addWidget(self.row)
+        self.col = QSpinBox()
+        hbox.addWidget(QLabel("col:"))
+        hbox.addWidget(self.col)
 
-        self.stack0 = NoFunction()
-        self.stack1 = Function_1()
-        self.stack2 = Function_2()
+        vbox.addLayout(hbox)
+        vbox.addStretch()
 
-        self.stackHub.addWidget(self.stack0)
-        self.stackHub.addWidget(self.stack1)
-        self.stackHub.addWidget(self.stack2)
+        label = QLabel("Neuron")
+        label.setAlignment(Qt.AlignCenter)
+        label.setFrameStyle(QFrame.Box | QFrame.Sunken)
+        vbox.addWidget(label)
 
-        vbox.addWidget(self.stackHub)
-        self.connect(combox, SIGNAL("activated(int)"), self.stackHub.setCurrentIndex)
+        self.paramaters = QPlainTextEdit()
+        self.paramaters.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.paramaters.setFrameStyle(QFrame.Plain)
+        vbox.addWidget(QLabel("parameters:"))
+        vbox.addWidget(self.paramaters)
+
+        self.equations = QPlainTextEdit()
+        self.equations.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.equations.setFrameStyle(QFrame.Plain)
+        vbox.addWidget(QLabel("equations:"))
+        vbox.addWidget(self.equations)
+
+        self.setLayout(vbox)
 
     def saveData(self):
-        self.data.update(self.stackHub.currentWidget().setData())
+        del self.tuple
+        self.tuple = (self.row.value(), self.col.value())
+        self.data["geometry_row"] = self.row.value()
+        self.data["geometry_col"] = self.col.value()
+        self.data["neuron_par"] = self.paramaters.toPlainText()
+        self.data["neuron_eq"] = self.equations.toPlainText()

@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         vbox1.addWidget(sim_button)
         hbox_1.addLayout(vbox1)
 
-        self.connect(self.tab1.scene, SIGNAL("repaintSignal()"), self.tab2.slot_DrawPlot)
+        self.connect(self.tab1.scene, SIGNAL("replot()"), self.tab2.slot_DrawPlot)
         self.connect(sim_button, SIGNAL("clicked()"), self.slot_all)
 
     def slot_all(self):
