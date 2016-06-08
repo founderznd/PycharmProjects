@@ -17,22 +17,6 @@ class NeuralButton(QToolButton):
         self.setAutoRaise(True)
 
 
-class ItemInfoView(QGroupBox):
-    def __init__(self):
-        super(ItemInfoView, self).__init__()
-        self.setTitle("Informations:")
-
-        self.layout = QFormLayout(self)
-
-        self.functionName = QLabel()
-
-    def setupInfo(self, d):
-        for item in d.items():
-            key = QLabel(str(item[0]))
-            value = QLabel(str(item[1]))
-            self.layout.addRow(key, value)
-
-
 class NeuralConnectionView(QWidget):
     def __init__(self):
         super(NeuralConnectionView, self).__init__()
@@ -55,19 +39,23 @@ class NeuralConnectionView(QWidget):
         # set DragMode to ScrollHandDrag
         view.setDragMode(QGraphicsView.ScrollHandDrag)
         self.connect(self.button1, SIGNAL("clicked()"), self.slotAddNeural1)
+        self.connect(self.scene, SIGNAL("selectedItem(int)"), self.slotChangeStack)
 
     def slotAddNeural1(self):
         item = ItemOne()
-        item.setPos(0, 0)
         self.scene.addItem(item)
+        self.scene.info_stack.addWidget(item.info)
 
     def getItemData(self):
         return self.scene.item_data
 
+    def slotChangeStack(self, i):
+        self.scene.info_stack.setCurrentIndex(len(self.scene.items()) - len(self.scene.edgelist) - i - 1)
+
 
 class MyScene(QGraphicsScene):
-    repaintSignal = pyqtSignal()
-    activated = pyqtSignal(int)
+    replot = pyqtSignal()
+    selectedItem = pyqtSignal(int)
 
     def __init__(self):
         super(MyScene, self).__init__()
@@ -76,6 +64,7 @@ class MyScene(QGraphicsScene):
         self.source = None
         self.dest = None
         self.currentItem = None
+        self.info_stack = QStackedWidget()
 
     def getCurrentIndex(self):
         index = 0
@@ -84,13 +73,13 @@ class MyScene(QGraphicsScene):
                 return index
             else:
                 index += 1
-        return -1
+        return index
 
     def addEdge(self):
         if self.source and self.dest:
             edge = Edge(self.source, self.dest)
             for e in self.edgelist:
-                if e.isSame(edge):
+                if e.isSameTo(edge):
                     return
             self.edgelist.append(edge)
             self.addItem(edge)
@@ -100,10 +89,10 @@ class MyScene(QGraphicsScene):
     def removeEdgesOf(self, item):
         l = []
         for edge in self.edgelist:
-            if edge.isEdgeFrom(item):
+            if edge.isConnectTo(item):
                 l.append(edge)
-                self.removeItem(edge)
         for edge in l:
+            self.removeItem(edge)
             self.edgelist.remove(edge)
 
     def mouseMoveEvent(self, e):
@@ -116,18 +105,17 @@ class MyScene(QGraphicsScene):
         self.update()
         super(MyScene, self).mousePressEvent(e)
         self.currentItem = self.itemAt(e.scenePos())
-        # emit a Signal with the index of currentItem
-        index = self.getCurrentIndex()
-        if index != -1:
-            self.activated.emit(index)
-        # show info on right
-        if e.button() == Qt.LeftButton:
-            if self.currentItem:
-                self.item_data = self.itemAt(e.scenePos()).info.data
-                self.repaintSignal.emit()
-
-        if e.button() == Qt.RightButton:
-            self.source = self.currentItem
+        if self.currentItem:
+            # emit a Signal with the index of currentItem
+            index = self.getCurrentIndex()
+            if index != -1:
+                self.selectedItem.emit(index)
+            # show info on right
+            if e.button() == Qt.LeftButton and self.currentItem.type() == 1:
+                self.item_data = self.currentItem.info.data
+                self.replot.emit()
+            if e.button() == Qt.RightButton:
+                self.source = self.currentItem
 
     def mouseReleaseEvent(self, e):
         self.update()
@@ -141,10 +129,12 @@ class MyScene(QGraphicsScene):
     def keyPressEvent(self, e):
         self.update()
         if e.key() == Qt.Key_Delete and self.currentItem:
-            self.removeEdgesOf(self.currentItem)
-            self.removeItem(self.currentItem)
-            self.currentItem = None
-            self.repaintSignal.emit()
+            if self.currentItem.type() == 1:
+                self.removeEdgesOf(self.currentItem)
+                self.info_stack.removeWidget(self.currentItem.info)
+                self.removeItem(self.currentItem)
+                self.currentItem = None
+                self.replot.emit()
 
 
 class Edge(QGraphicsItem):
@@ -158,13 +148,17 @@ class Edge(QGraphicsItem):
         self.sourcePoint = self.source.scenePos()
         self.destPoint = self.dest.scenePos()
 
-    def isSame(self, edge):
-        if edge.source == self.source and edge.dest == self.dest:
+    def type(self):
+        return 0
+
+    def isSameTo(self, edge):
+        if (edge.source == self.source and edge.dest == self.dest) or (
+                        edge.source == self.dest and edge.dest == self.source):
             return True
         else:
             return False
 
-    def isEdgeFrom(self, item):
+    def isConnectTo(self, item):
         if self.source == item or self.dest == item:
             return True
         else:
@@ -196,7 +190,10 @@ class ItemOne(QGraphicsItem):
         # make sure items alway above edges
         self.setZValue(1)
 
-        self.info = info.Parameters()
+        self.info = info.ParameterStack()
+
+    def type(self):
+        return 1
 
     def boundingRect(self):
         return QRectF(-self.pix.width() / 2, -self.pix.height() / 2, self.pix.width(), self.pix.height())

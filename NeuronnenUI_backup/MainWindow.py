@@ -25,37 +25,27 @@ class MainWindow(QMainWindow):
         tabwidget.addTab(self.tab2, "Graphics")
         hbox_1.addWidget(tabwidget)
 
-        self.vbox1 = QVBoxLayout()
-        self.info = QGroupBox()
-        self.info.setTitle("Paramters:")
-        info_layout = QVBoxLayout(self.info)
+        vbox1 = QVBoxLayout()
+        groupBox = QGroupBox("Informations:")
+        vvbox = QVBoxLayout()
+        info = self.tab1.scene.info_stack
+        vvbox.addWidget(info)
+        groupBox.setLayout(vvbox)
 
-        info_layout.addStretch()
-        self.par1 = QLabel("No Data!!")
-        info_layout.addWidget(self.par1)
-        self.par1.setAlignment(Qt.AlignCenter)
+        sim_button = QPushButton("Simulation")
+        sim_button.setFixedSize(240, 80)
+        groupBox.setMaximumWidth(240)
+        vbox1.addWidget(groupBox)
+        vbox1.addWidget(sim_button)
+        hbox_1.addLayout(vbox1)
 
-        info_layout.addStretch()
+        self.connect(self.tab1.scene, SIGNAL("replot()"), self.tab2.slot_DrawPlot)
+        self.connect(sim_button, SIGNAL("clicked()"), self.slot_all)
 
-        self.sim_button = QPushButton("Begin")
-        self.sim_button.setFixedSize(240, 80)
-        self.info.setMaximumWidth(240)
-        self.vbox1.addWidget(self.info)
-        self.vbox1.addWidget(self.sim_button)
-        hbox_1.addLayout(self.vbox1)
-
-        self.connect(self.tab1.scene, SIGNAL("repaintSignal()"), self.slot_rewriteInfo)
-        self.connect(self.tab1.scene, SIGNAL("repaintSignal()"), self.tab2.slot_DrawPlot)
-        self.connect(self.sim_button, SIGNAL("clicked()"), self.tab2.slot_DrawPlot)
-
-    def slot_rewriteInfo(self):
-        data = self.tab1.getItemData()
-        s = QString(str(data))
-        s.remove("{")
-        s.remove("}")
-        self.par1.setText(s)
-        self.par1.setWordWrap(True)
-
+    def slot_all(self):
+        if self.tab1.scene.currentItem:
+            self.tab1.scene.currentItem.info.saveData()
+        self.tab2.slot_DrawPlot()
 
 
 if __name__ == '__main__':

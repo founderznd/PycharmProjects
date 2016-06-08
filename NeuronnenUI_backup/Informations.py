@@ -74,18 +74,19 @@ class Function_2(QGroupBox):
 """ ################################################################## """
 
 
-class Parameters(QWidget):
+class ParameterStack(QWidget):
     def __init__(self):
-        super(Parameters, self).__init__()
+        super(ParameterStack, self).__init__()
         self.i = 0
         # all parameters will be saved in this dictionary
         self.data = {}
 
-        self.vbox = QVBoxLayout(self)
+        vbox = QVBoxLayout(self)
+        # vbox.addStretch()
 
-        self.combox = QComboBox()
-        self.combox.addItems(["none", "1", "2"])
-        self.vbox.addWidget(self.combox)
+        combox = QComboBox()
+        combox.addItems(["none", "1", "2"])
+        vbox.addWidget(combox)
 
         self.stackHub = QStackedWidget()
 
@@ -97,29 +98,8 @@ class Parameters(QWidget):
         self.stackHub.addWidget(self.stack1)
         self.stackHub.addWidget(self.stack2)
 
-        self.vbox.addWidget(self.stackHub)
-        self.connect(self.combox, SIGNAL("activated(int)"), self.stackHub.setCurrentIndex)
-
-        self.save_button = QPushButton("Save")
-        self.cancel_button = QPushButton("Cancel")
-        hbox = QHBoxLayout()
-        hbox.addStretch()
-        hbox.addWidget(self.cancel_button)
-        hbox.addWidget(self.save_button)
-        self.vbox.addLayout(hbox)
-
-        self.connect(self.cancel_button, SIGNAL("clicked()"), self.close)
-        self.connect(self.save_button, SIGNAL("clicked()"), self.saveData)
-
-    def setupInfo(self):
-        f = self.stackHub.currentIndex()
-        if f == 0:
-            self.data.update(self.stack0.setData())
-        elif f == 1:
-            self.data.update(self.stack1.setData())
-        elif f == 2:
-            self.data.update(self.stack2.setData())
+        vbox.addWidget(self.stackHub)
+        self.connect(combox, SIGNAL("activated(int)"), self.stackHub.setCurrentIndex)
 
     def saveData(self):
-        self.setupInfo()
-        self.close()
+        self.data.update(self.stackHub.currentWidget().setData())

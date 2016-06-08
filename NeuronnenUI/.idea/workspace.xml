@@ -1,40 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8882d307-6868-4072-9176-ae68997cdd63" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../Qt_Model_View/Delegate.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../Qt_Model_View/FileBrowser.py" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/.idea/GraphicsView.iml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/.idea/dictionaries/nandi.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/.idea/file.template.settings.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/.idea/inspectionProfiles/Project_Default.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/.idea/inspectionProfiles/profiles_settings.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/.idea/misc.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/.idea/modules.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/.idea/workspace.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/GraphicsItem.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/MapBrowser.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/image/Mushroom.PNG" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/image/mario.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../GraphicsView/image/worldmap.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/.idea/NeuronnenUI_2.iml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/.idea/inspectionProfiles/Project_Default.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/.idea/inspectionProfiles/profiles_settings.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/.idea/misc.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/.idea/modules.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/.idea/workspace.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/ConnectionView.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/Informations.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/MainWindow.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/PlotView.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/image/neural.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_2/image/neural2.png" afterPath="" />
+    <list default="true" id="8882d307-6868-4072-9176-ae68997cdd63" name="Default" comment="rewrite class Informations&#10;&#10;now all infos will be saved in two componnents&#10;&#10;self.tuple keep the geometry of the neuron-population&#10;&#10;self.data keep the information of the neuron">
+      <change type="DELETED" beforePath="$PROJECT_DIR$/../NeuronnenUI_backup/test.py" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ConnectionView.py" afterPath="$PROJECT_DIR$/ConnectionView.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Informations.py" afterPath="$PROJECT_DIR$/Informations.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/MainWindow.py" afterPath="$PROJECT_DIR$/MainWindow.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PlotView.py" afterPath="$PROJECT_DIR$/PlotView.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../Qt_Model_View/.idea/workspace.xml" afterPath="$PROJECT_DIR$/../Qt_Model_View/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../NeuronnenUI_backup/ConnectionView.py" afterPath="$PROJECT_DIR$/../NeuronnenUI_backup/ConnectionView.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../NeuronnenUI_backup/Informations.py" afterPath="$PROJECT_DIR$/../NeuronnenUI_backup/Informations.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../NeuronnenUI_backup/MainWindow.py" afterPath="$PROJECT_DIR$/../NeuronnenUI_backup/MainWindow.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../NeuronnenUI_backup/PlotView.py" afterPath="$PROJECT_DIR$/../NeuronnenUI_backup/PlotView.py" />
     </list>
     <ignored path="NeuronnenUI_2.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -58,8 +31,8 @@
       <file leaf-file-name="Informations.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Informations.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="319">
-              <caret line="32" column="0" selection-start-line="32" selection-start-column="0" selection-end-line="32" selection-end-column="0" />
+            <state relative-caret-position="508">
+              <caret line="41" column="42" selection-start-line="41" selection-start-column="42" selection-end-line="41" selection-end-column="42" />
               <folding />
             </state>
           </provider>
@@ -68,7 +41,7 @@
       <file leaf-file-name="ConnectionView.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ConnectionView.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-2297">
+            <state relative-caret-position="609">
               <caret line="29" column="36" selection-start-line="29" selection-start-column="36" selection-end-line="29" selection-end-column="36" />
               <folding />
             </state>
@@ -78,7 +51,7 @@
       <file leaf-file-name="MainWindow.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/MainWindow.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="235">
+            <state relative-caret-position="441">
               <caret line="21" column="18" selection-start-line="21" selection-start-column="18" selection-end-line="21" selection-end-column="18" />
               <folding />
             </state>
@@ -122,9 +95,10 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
+    <option name="x" value="-1" />
     <option name="y" value="31" />
-    <option name="width" value="1920" />
-    <option name="height" value="1049" />
+    <option name="width" value="1922" />
+    <option name="height" value="1050" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <OptionsSetting value="true" id="Add" />
@@ -151,7 +125,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -172,6 +145,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
       <pane id="Scratches" />
     </panes>
   </component>
@@ -434,7 +408,14 @@
       <option name="project" value="LOCAL" />
       <updated>1464887258914</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="rewrite class Informations&#10;&#10;now all infos will be saved in two componnents&#10;&#10;self.tuple keep the geometry of the neuron-population&#10;&#10;self.data keep the information of the neuron">
+      <created>1465374019155</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1465374019155</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TodoView">
@@ -447,26 +428,26 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="31" width="1920" height="1049" extended-state="6" />
-    <editor active="true" />
+    <frame x="-1" y="31" width="1922" height="1050" extended-state="6" />
+    <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.19488817" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.19483939" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20641711" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="true" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="right" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2140575" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="678" y="38" width="564" height="995" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32941177" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32834226" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24812834" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3279743" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32834226" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2647374" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24812834" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="right" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2140575" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="678" y="38" width="564" height="995" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2647374" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -482,7 +463,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="基本功能：&#10;1 add widget into QGraphicsScene&#10;2 del widget from scene&#10;3 connect two widgets&#10;4 show function info of widget&#10;5 draw matplot figure of widget" />
-    <option name="LAST_COMMIT_MESSAGE" value="基本功能：&#10;1 add widget into QGraphicsScene&#10;2 del widget from scene&#10;3 connect two widgets&#10;4 show function info of widget&#10;5 draw matplot figure of widget" />
+    <MESSAGE value="rewrite class Informations&#10;&#10;now all infos will be saved in two componnents&#10;&#10;self.tuple keep the geometry of the neuron-population&#10;&#10;self.data keep the information of the neuron" />
+    <option name="LAST_COMMIT_MESSAGE" value="rewrite class Informations&#10;&#10;now all infos will be saved in two componnents&#10;&#10;self.tuple keep the geometry of the neuron-population&#10;&#10;self.data keep the information of the neuron" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -514,7 +496,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="5838">
           <caret line="278" column="8" selection-start-line="278" selection-start-column="8" selection-end-line="278" selection-end-column="8" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -560,7 +541,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15120">
           <caret line="720" column="8" selection-start-line="720" selection-start-column="8" selection-end-line="720" selection-end-column="8" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -616,7 +596,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="12978">
           <caret line="618" column="8" selection-start-line="618" selection-start-column="8" selection-end-line="618" selection-end-column="8" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -674,7 +653,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="200">
           <caret line="73" column="8" selection-start-line="73" selection-start-column="8" selection-end-line="73" selection-end-column="8" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -773,7 +751,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15120">
           <caret line="720" column="8" selection-start-line="720" selection-start-column="8" selection-end-line="720" selection-end-column="8" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -782,7 +759,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="453">
           <caret line="123" column="50" selection-start-line="123" selection-start-column="44" selection-end-line="123" selection-end-column="50" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -797,7 +773,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="634">
           <caret line="278" column="8" selection-start-line="278" selection-start-column="8" selection-end-line="278" selection-end-column="8" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -812,7 +787,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="529">
           <caret line="137" column="12" selection-start-line="137" selection-start-column="12" selection-end-line="137" selection-end-column="12" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -820,7 +794,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1674">
           <caret line="1011" column="16" selection-start-line="1011" selection-start-column="16" selection-end-line="1011" selection-end-column="16" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -828,7 +801,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="123">
           <caret line="930" column="0" selection-start-line="934" selection-start-column="13" selection-end-line="934" selection-end-column="20" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -842,7 +814,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/MainWindow.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="235">
+        <state relative-caret-position="441">
           <caret line="21" column="18" selection-start-line="21" selection-start-column="18" selection-end-line="21" selection-end-column="18" />
           <folding />
         </state>
@@ -850,7 +822,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/ConnectionView.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2297">
+        <state relative-caret-position="609">
           <caret line="29" column="36" selection-start-line="29" selection-start-column="36" selection-end-line="29" selection-end-column="36" />
           <folding />
         </state>
@@ -860,14 +832,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
           <caret line="129" column="8" selection-start-line="129" selection-start-column="8" selection-end-line="129" selection-end-column="8" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Informations.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="319">
-          <caret line="32" column="0" selection-start-line="32" selection-start-column="0" selection-end-line="32" selection-end-column="0" />
+        <state relative-caret-position="508">
+          <caret line="41" column="42" selection-start-line="41" selection-start-column="42" selection-end-line="41" selection-end-column="42" />
           <folding />
         </state>
       </provider>
