@@ -16,11 +16,12 @@ class ParameterStack(QWidget):
         self.tuple = None
 
         vbox = QVBoxLayout()
-        vbox.addStretch()
+        vbox.setSpacing(20)
 
         label = QLabel("Geometry")
+        label.setMinimumHeight(50)
+        label.setFrameStyle(QFrame.Box|QFrame.Raised)
         label.setAlignment(Qt.AlignCenter)
-        label.setFrameStyle(QFrame.Box | QFrame.Sunken)
         vbox.addWidget(label)
 
         hbox = QHBoxLayout()
@@ -35,8 +36,9 @@ class ParameterStack(QWidget):
         vbox.addStretch()
 
         label = QLabel("Neuron")
+        label.setMinimumHeight(50)
+        label.setFrameStyle(QFrame.Box|QFrame.Raised)
         label.setAlignment(Qt.AlignCenter)
-        label.setFrameStyle(QFrame.Box | QFrame.Sunken)
         vbox.addWidget(label)
 
         self.paramaters = QPlainTextEdit()
