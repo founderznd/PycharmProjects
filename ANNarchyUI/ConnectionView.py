@@ -16,7 +16,7 @@ class PopulationButton(QToolButton):
     def __init__(self, iconpath):
         super(PopulationButton, self).__init__()
         self.setFixedSize(50, 50)
-        # these two code solve the warning below
+        # the two lines below solved the warning
         # libpng warning: iCCP: known incorrect sRGB profile
         self.image = QImage(iconpath)
         self.image.save(iconpath, "PNG")
