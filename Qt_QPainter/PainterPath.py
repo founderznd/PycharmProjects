@@ -4,6 +4,7 @@ import sys
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from math import sqrt
 
 
 class MainWidget(QWidget):
@@ -85,10 +86,15 @@ class PaintArea(QWidget):
         self.brush.setColor(Qt.darkCyan)
 
         self.path = QPainterPath()
-        self.path.addRect(150, 150, 100, 100)
+        self.path.addEllipse(QRectF(150, 150, 100, 100))
         self.path.moveTo(100, 100)
         self.path.cubicTo(300, 100, 200, 200, 300, 300)
         self.path.cubicTo(100, 300, 200, 200, 100, 100)
+        self.path.moveTo(100, 300)
+        self.path.cubicTo(100, 100, 200, 200, 300, 100)
+        self.path.cubicTo(300, 300, 200, 200, 100, 300)
+        self.path.moveTo(100, 100)
+        self.path.addEllipse(QPointF(200, 200), 100 * sqrt(2), 100 * sqrt(2))
 
     def paintEvent(self, e):
         p = QPainter(self)
