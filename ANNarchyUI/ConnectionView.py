@@ -1,4 +1,5 @@
 # coding:utf-8
+import math
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -13,9 +14,10 @@ class ItemType(object):
 
 
 class PopulationButton(QToolButton):
+    SIZE = 50
     def __init__(self, iconpath):
         super(PopulationButton, self).__init__()
-        self.setFixedSize(50, 50)
+        self.setFixedSize(PopulationButton.SIZE, PopulationButton.SIZE)
         # the two lines below solved the warning
         # libpng warning: iCCP: known incorrect sRGB profile
         self.image = QImage(iconpath)
@@ -152,6 +154,9 @@ class MyScene(QGraphicsScene):
 
 
 class Edge(QGraphicsLineItem):
+    OffSet = 40
+    ArrowSize = 11
+
     def __init__(self, sourceNode, destNode):
         super(Edge, self).__init__()
         self.type = ItemType.EDGE
@@ -167,7 +172,9 @@ class Edge(QGraphicsLineItem):
 
         self.sourcePoint = self.source.scenePos()
         self.destPoint = self.dest.scenePos()
-        self.setLine(QLineF(self.sourcePoint, self.destPoint))
+        self.l = QLineF(self.sourcePoint, self.destPoint)
+        self.l.setLength(self.l.length() - Edge.OffSet * math.sqrt(2))
+        self.setLine(self.l)
 
     def isSameTo(self, edge):
         if (edge.source == self.source and edge.dest == self.dest) or (
@@ -176,24 +183,57 @@ class Edge(QGraphicsLineItem):
         else:
             return False
 
-    # def isConnectTo(self, item):
-    #     if self.contains(item.pos()):
-    #         return True
-    #     else:
-    #         return False
+    def contains(self, p):
+        if p == self.sourcePoint or p == self.destPoint:
+            return True
+        else:
+            return False
 
     def update(self):
         super(Edge, self).update()
         self.sourcePoint = self.source.scenePos()
         self.destPoint = self.dest.scenePos()
-        self.setLine(QLineF(self.sourcePoint, self.destPoint))
+        self.l = QLineF(self.sourcePoint, self.destPoint)
+        self.l.setLength(self.l.length() - Edge.OffSet * math.sqrt(2))
+        self.setLine(self.l)
+
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
+        super(Edge, self).paint(QPainter, QStyleOptionGraphicsItem, None)
+        # begin draw Arrow
+        v1 = self.l.unitVector()
+        v1.setLength(Edge.ArrowSize)
+        # this is very important
+        v1.translate(QPointF(self.l.dx(), self.l.dy()))
+
+        p1 = v1.p2()
+        v2 = v1.normalVector()
+        v2.setLength(v1.length() * 0.4)
+        p2 = v2.p2()
+        v3 = v2.normalVector().normalVector()
+        p3 = v3.p2()
+
+        arrow = QPolygonF([p1, p2, p3, p1])
+
+        path = QPainterPath()
+        path.addPolygon(arrow)
+        pen = QPen()
+        pen.setJoinStyle(Qt.MiterJoin)
+        QPainter.setPen(pen)
+        brush = QBrush()
+        brush.setColor(Qt.black)
+        brush.setStyle(Qt.SolidPattern)
+        QPainter.setBrush(brush)
+
+        QPainter.drawPath(path)
 
 
 class Population(QGraphicsItem):
+    SIZE = 80
+
     def __init__(self):
         super(Population, self).__init__()
         self.type = ItemType.NEURON
-        self.pix = QPixmap("image/neuron.png").scaled(80, 80)
+        self.pix = QPixmap("image/neuron.png").scaled(Population.SIZE, Population.SIZE)
         self.setFlag(QGraphicsItem.ItemIsMovable)
         # make sure items alway above edges
         self.setZValue(1)
@@ -202,5 +242,5 @@ class Population(QGraphicsItem):
     def boundingRect(self):
         return QRectF(-self.pix.width() / 2, -self.pix.height() / 2, self.pix.width(), self.pix.height())
 
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget = None):
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
         QPainter.drawPixmap(-self.pix.width() / 2, -self.pix.height() / 2, self.pix)

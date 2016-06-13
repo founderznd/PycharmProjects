@@ -62,10 +62,10 @@ class InfoWidget(QWidget):
         self.format_Data()
         # self.ui.name.undo()
         # self.ui.geometry.undo()
-        self.dui.parameter.undo()
-        self.dui.equation.undo()
-        self.dui.spike.undo()
-        self.dui.reset.undo()
+        self.dui.parameter.setText(self.data.get("parameter"))
+        self.dui.equation.setText(self.data.get("equation"))
+        self.dui.spike.setText(self.data.get("spike"))
+        self.dui.reset.setText(self.data.get("reset"))
 
     # make sure the data in dictionary is valid
     def format_Data(self):
