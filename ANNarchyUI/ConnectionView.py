@@ -20,6 +20,7 @@ class PopulationButton(QToolButton):
         # libpng warning: iCCP: known incorrect sRGB profile
         self.image = QImage(iconpath)
         self.image.save(iconpath, "PNG")
+
         self.pix = QPixmap(iconpath)
         self.setIconSize(self.size())
         self.setIcon(QIcon(self.pix))
