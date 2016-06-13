@@ -198,9 +198,3 @@ class Population(QGraphicsItem):
 
     def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
         QPainter.drawPixmap(-self.pix.width() / 2, -self.pix.height() / 2, self.pix)
-
-    # setup parameters in a QDialog and return them to info.parameterDict
-    def mouseDoubleClickEvent(self, e):
-        super(Population, self).mouseDoubleClickEvent(e)
-        if e.button() == Qt.LeftButton:
-            self.info.show()
