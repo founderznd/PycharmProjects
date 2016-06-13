@@ -13,9 +13,13 @@ class ItemType(object):
 
 
 class PopulationButton(QToolButton):
-    def __init__(self,iconpath):
+    def __init__(self, iconpath):
         super(PopulationButton, self).__init__()
         self.setFixedSize(50, 50)
+        # these two code solve the warning below
+        # libpng warning: iCCP: known incorrect sRGB profile
+        self.image = QImage(iconpath)
+        self.image.save(iconpath, "PNG")
         self.pix = QPixmap(iconpath)
         self.setIconSize(self.size())
         self.setIcon(QIcon(self.pix))
@@ -49,14 +53,13 @@ class NeuralConnectionView(QGraphicsView):
             self.centerOn(self.scene.currentItem)
 
 
-
 class MyScene(QGraphicsScene):
     replot = pyqtSignal()
 
     def __init__(self):
         super(MyScene, self).__init__()
         self.setItemIndexMethod(QGraphicsScene.BspTreeIndex)
-        self.setSceneRect(0,0,1920,1080)
+        self.setSceneRect(0, 0, 1920, 1080)
         self.item_data = {}
         self.source = None
         self.dest = None
@@ -198,5 +201,5 @@ class Population(QGraphicsItem):
     def boundingRect(self):
         return QRectF(-self.pix.width() / 2, -self.pix.height() / 2, self.pix.width(), self.pix.height())
 
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget = None):
         QPainter.drawPixmap(-self.pix.width() / 2, -self.pix.height() / 2, self.pix)
