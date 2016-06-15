@@ -24,7 +24,7 @@ class InfoWidget(QWidget):
         self.ui.setupUi(self)
 
         # all parameters will be saved in this dictionary
-        self.data = {"name": "", "geometry": "", "parameter": "", "equation": "", "spike": "", "reset": ""}
+        self.data = {"name": "", "  hgeometry": "", "parameter": "", "equation": "", "spike": "", "reset": ""}
         self.predata = self.data
         # geometry infos saved in this tuple
         self.tuple = None
@@ -37,8 +37,8 @@ class InfoWidget(QWidget):
         self.dui.setupUi(self.dialog)
 
         self.connect(self.ui.neuron_type, SIGNAL("activated(int)"), self.open_Dialog)
-        self.connect(self.ui.name, SIGNAL("editingFinished()"), self.slot_updateData)
-        self.connect(self.ui.geometry, SIGNAL("editingFinished()"), self.slot_updateData)
+        self.connect(self.ui.name, SIGNAL("returnPressed()"), self.slot_updateData)
+        self.connect(self.ui.geometry, SIGNAL("returnPressed()"), self.slot_updateData)
         self.connect(self.dui.buttonBox, SIGNAL("accepted()"), self.slot_updateData)
         self.connect(self.dui.buttonBox, SIGNAL("rejected()"), self.slot_rollback)
 
@@ -55,13 +55,13 @@ class InfoWidget(QWidget):
         a = str(self.data.get("geometry"))
         if a:
             self.tuple = literal_eval(a)
+        if self.ui.neuron_type.findText(self.dui.neurontype.text()) == -1:
+            self.ui.neuron_type.insertItem(self.ui.neuron_type.count() - 1, self.dui.neurontype.text())
 
     # data rollback
     def slot_rollback(self):
         self.data.update(self.predata)
         self.format_Data()
-        # self.ui.name.undo()
-        # self.ui.geometry.undo()
         self.dui.parameter.setText(self.data.get("parameter"))
         self.dui.equation.setText(self.data.get("equation"))
         self.dui.spike.setText(self.data.get("spike"))
@@ -71,11 +71,17 @@ class InfoWidget(QWidget):
     def format_Data(self):
         # geometry
         geometry = self.data.get("geometry")
-        self.rx.indexIn(geometry)
-        strl = self.rx.capturedTexts()
-        strl[0] = strl[0].remove(" ")
-        self.ui.geometry.setText(strl[0])
-        self.data.update({"geometry": strl[0]})
+        if geometry:
+            pos = self.rx.indexIn(geometry)
+            if pos == -1:
+                QMessageBox.information(None, "error", "please type paramters like (a1,a2,...,an)")
+                self.data.update({"geometry": ""})
+                self.ui.geometry.setText("")
+            else:
+                strl = self.rx.capturedTexts()
+                strl[0] = strl[0].remove(" ")
+                self.ui.geometry.setText(strl[0])
+                self.data.update({"geometry": strl[0]})
 
     def open_Dialog(self, i):
         self.predata.update(self.data)
@@ -86,12 +92,17 @@ class InfoWidget(QWidget):
             self.dui.label_4.hide()
             self.dui.spike.hide()
             self.dui.reset.hide()
-            self.data.setdefault("spike")
-            self.data.setdefault("reset")
-        elif i is NeuronType.Izhikevich or NeuronType.DefineOwn:
+            self.dui.neurontype.setText("LeakyIntegratorNeuron")
+            self.dui.neurontype.setReadOnly(True)
+        elif i is NeuronType.Izhikevich:
             self.dui.label_2.show()
             self.dui.label_4.show()
             self.dui.spike.show()
             self.dui.reset.show()
+            self.dui.neurontype.setText("Izhikevich")
+            self.dui.neurontype.setReadOnly(True)
+        elif i is NeuronType.DefineOwn:
+            self.dui.neurontype.setText("")
+            self.dui.neurontype.setReadOnly(False)
 
         self.dialog.exec_()

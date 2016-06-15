@@ -15,6 +15,7 @@ class ItemType(object):
 
 class PopulationButton(QToolButton):
     SIZE = 50
+
     def __init__(self, iconpath):
         super(PopulationButton, self).__init__()
         self.setFixedSize(PopulationButton.SIZE, PopulationButton.SIZE)
@@ -37,14 +38,14 @@ class NeuralConnectionView(QGraphicsView):
         self.setScene(self.scene)
 
         self.layout = QGridLayout(self)
-        self.poplutaion_button = PopulationButton("image/neuron.png")
-        self.poplutaion_button.setToolTip("click to add a Population to scene")
+        self.population_button = PopulationButton("image/neuron.png")
+        self.population_button.setToolTip("click to add a Population to scene")
 
         self.center_button = PopulationButton("image/centerOn.png")
         self.center_button.setToolTip("focus on the selected Population")
         self.center_button.setCheckable(False)
 
-        self.layout.addWidget(self.poplutaion_button, 0, 0)
+        self.layout.addWidget(self.population_button, 0, 0)
         self.layout.addWidget(self.center_button, 1, 0)
         self.layout.setRowStretch(self.layout.rowCount(), 1)
         self.layout.setColumnStretch(self.layout.columnCount(), 1)
@@ -54,6 +55,20 @@ class NeuralConnectionView(QGraphicsView):
     def slot_centerOn(self):
         if self.scene.currentItem:
             self.centerOn(self.scene.currentItem)
+
+    # delete currentItem when press "del" on keyboard
+    def keyPressEvent(self, e):
+        if self.scene.currentItem and self.scene.currentItem.type == ItemType.NEURON:
+            if e.key() == Qt.Key_Delete:
+                self.scene.removeEdgesOf(self.scene.currentItem)
+                self.scene.info_stack.removeWidget(self.scene.currentItem.info)
+                self.scene.removeItem(self.scene.currentItem)
+                self.scene.currentItem = None
+                self.scene.replot.emit()
+        if e.key() == Qt.Key_Escape:
+            self.population_button.setChecked(False)
+            self.scene.isPrepared = False
+        self.scene.update()
 
 
 class MyScene(QGraphicsScene):
@@ -135,17 +150,6 @@ class MyScene(QGraphicsScene):
                 self.addEdge(self.source, self.dest)
                 self.update()
 
-    # delete currentItem when press "del" on keyboard
-    def keyPressEvent(self, e):
-        if self.currentItem and self.currentItem.type == ItemType.NEURON:
-            if e.key() == Qt.Key_Delete:
-                self.removeEdgesOf(self.currentItem)
-                self.info_stack.removeWidget(self.currentItem.info)
-                self.removeItem(self.currentItem)
-                self.currentItem = None
-                self.replot.emit()
-                self.update()
-
     def mouseDoubleClickEvent(self, e):
         if self.currentItem and self.currentItem.type == ItemType.NEURON:
             if e.button() == Qt.LeftButton:
@@ -166,8 +170,8 @@ class Edge(QGraphicsLineItem):
         self.dest = destNode
 
         self.pen = QPen()
-        self.pen.setWidth(2)
-        self.pen.setStyle(Qt.DashLine)
+        self.pen.setWidth(5)
+        self.pen.setStyle(Qt.DotLine)
         self.setPen(self.pen)
 
         self.sourcePoint = self.source.scenePos()
@@ -197,7 +201,7 @@ class Edge(QGraphicsLineItem):
         self.l.setLength(self.l.length() - Edge.OffSet * math.sqrt(2))
         self.setLine(self.l)
 
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget = None):
         super(Edge, self).paint(QPainter, QStyleOptionGraphicsItem, None)
         # begin draw Arrow
         v1 = self.l.unitVector()
@@ -242,5 +246,5 @@ class Population(QGraphicsItem):
     def boundingRect(self):
         return QRectF(-self.pix.width() / 2, -self.pix.height() / 2, self.pix.width(), self.pix.height())
 
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget = None):
         QPainter.drawPixmap(-self.pix.width() / 2, -self.pix.height() / 2, self.pix)

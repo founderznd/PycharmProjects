@@ -18,45 +18,55 @@
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
+       <item row="4" column="0">
+        <widget class="QLineEdit" name="spike"/>
+       </item>
+       <item row="1" column="0">
         <widget class="QLabel" name="label">
          <property name="text">
           <string>Parameters</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
+       <item row="1" column="1">
         <widget class="QLabel" name="label_3">
          <property name="text">
           <string>Equation</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
+       <item row="2" column="0">
         <widget class="QTextEdit" name="parameter"/>
        </item>
-       <item row="1" column="1">
+       <item row="2" column="1">
         <widget class="QTextEdit" name="equation"/>
        </item>
-       <item row="2" column="0">
+       <item row="3" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
           <string>Spike</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="3" column="1">
         <widget class="QLabel" name="label_4">
          <property name="text">
           <string>Reset</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QLineEdit" name="spike"/>
-       </item>
-       <item row="3" column="1">
+       <item row="4" column="1">
         <widget class="QLineEdit" name="reset"/>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Neuron Type</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="neurontype"/>
        </item>
       </layout>
      </item>

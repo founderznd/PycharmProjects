@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
 
         self.connect(self.ui.simulation_button, SIGNAL("clicked()"), self.slot_all)
         self.connect(self.ui.connection_gview.scene, SIGNAL("replot()"), self.ui.matplot_tab.slot_DrawPlot)
-        self.connect(self.ui.connection_gview.poplutaion_button, SIGNAL("clicked(bool)"), self.slot_addNeuron)
+        self.connect(self.ui.connection_gview.population_button, SIGNAL("clicked(bool)"), self.slot_addNeuron)
 
     def slot_all(self):
         if self.ui.connection_gview.scene.currentItem:
