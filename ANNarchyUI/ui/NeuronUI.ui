@@ -35,13 +35,13 @@
         <property name="currentIndex">
          <number>0</number>
         </property>
-        <widget class="QWidget" name="connections_tab">
+        <widget class="QWidget" name="tab_network">
          <attribute name="title">
-          <string>Connections</string>
+          <string>Network</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_2">
           <item row="0" column="0">
-           <widget class="NeuralConnectionView" name="connection_gview">
+           <widget class="NeuralConnectionView" name="gview_network">
             <property name="frameShape">
              <enum>QFrame::NoFrame</enum>
             </property>
@@ -84,7 +84,7 @@
           </item>
          </layout>
         </widget>
-        <widget class="OutputGraphic" name="matplot_tab">
+        <widget class="OutputGraphic" name="tab_matplot">
          <attribute name="title">
           <string>Matplot</string>
          </attribute>

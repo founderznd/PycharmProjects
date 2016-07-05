@@ -16,6 +16,7 @@ class OutputGraphic(QWidget):
         self.plt1 = self.fig.add_subplot(311)
         self.plt2 = self.fig.add_subplot(312)
         self.plt3 = self.fig.add_subplot(313)
+        # self.plt = self.fig.add_subplot(111)
 
         self.canvas = FigureCanvasQTAgg(self.fig)
         toolbar = NavigationToolbar2QT(self.canvas, self)
@@ -34,7 +35,7 @@ class OutputGraphic(QWidget):
         self.plt2.cla()
         self.plt3.cla()
 
-        self.plt1.text(0.2, 0.2, data.get("name"))
+        self.plt1.text(0.2, 0.2, "DSFAasdf")
 
         self.plt2.text(0.2, 0.2, data.get("geometry"))
 

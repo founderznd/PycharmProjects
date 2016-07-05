@@ -4,13 +4,13 @@ import math
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-import Informations as info
+import Informations
 
 
 # enum of itemtype
 class ItemType(object):
-    EDGE = 0
-    NEURON = 1
+    PROJECTION = 0
+    POPULATION = 1
 
 
 class PopulationButton(QToolButton):
@@ -19,10 +19,12 @@ class PopulationButton(QToolButton):
     def __init__(self, iconpath):
         super(PopulationButton, self).__init__()
         self.setFixedSize(PopulationButton.SIZE, PopulationButton.SIZE)
-        # the two lines below solved the warning
+
+        # these two lines codes below solved the warning
         # libpng warning: iCCP: known incorrect sRGB profile
-        self.image = QImage(iconpath)
-        self.image.save(iconpath, "PNG")
+        # uncomment them if necessary
+        # self.image = QImage(iconpath)
+        # self.image.save(iconpath, "PNG")
 
         self.pix = QPixmap(iconpath)
         self.setIconSize(self.size())
@@ -58,13 +60,13 @@ class NeuralConnectionView(QGraphicsView):
 
     # delete currentItem when press "del" on keyboard
     def keyPressEvent(self, e):
-        if self.scene.currentItem and self.scene.currentItem.type == ItemType.NEURON:
+        if self.scene.currentItem and self.scene.currentItem.type == ItemType.POPULATION:
             if e.key() == Qt.Key_Delete:
-                self.scene.removeEdgesOf(self.scene.currentItem)
+                self.scene.removeProjectionsOf(self.scene.currentItem)
                 self.scene.info_stack.removeWidget(self.scene.currentItem.info)
                 self.scene.removeItem(self.scene.currentItem)
                 self.scene.currentItem = None
-                self.scene.replot.emit()
+                self.scene.sig_replot.emit()
         if e.key() == Qt.Key_Escape:
             self.population_button.setChecked(False)
             self.scene.isPrepared = False
@@ -72,113 +74,145 @@ class NeuralConnectionView(QGraphicsView):
 
 
 class MyScene(QGraphicsScene):
-    replot = pyqtSignal()
+    sig_replot = pyqtSignal()
 
     def __init__(self):
         super(MyScene, self).__init__()
         self.setItemIndexMethod(QGraphicsScene.BspTreeIndex)
         self.setSceneRect(0, 0, 1920, 1080)
-        self.item_data = {}
+        self.item_data = dict()
+        self.neuronsdict = dict()
+        self.synapsedict = dict()
         self.source = None
         self.dest = None
         self.currentItem = None
         self.isPrepared = False
-        self.info_stack = info.QStackedWidget()
+        self.info_stack = QStackedWidget()
 
     def update(self, *__args):
         super(MyScene, self).update()
         rect = self.itemsBoundingRect()
         rect = rect.united(self.sceneRect())
         self.setSceneRect(rect)
+        if self.currentItem:
+            self.currentItem.info.update()
 
-    def addEdge(self, source, dest):
+    # synchronize neuron types to all Populations
+    def updateNeurondict(self, nd):
+        self.neuronsdict.update(nd)
+        for item in self.items():
+            if item.type == ItemType.POPULATION:
+                item.info.synchronizeDict(self.neuronsdict)
+
+    # synchronize synapse types to all Projections
+    def updateSynapsedict(self, sd):
+        self.synapsedict.update(sd)
+        for item in self.items():
+            if item.type == ItemType.PROJECTION:
+                item.info.synchronizeDict(self.synapsedict)
+
+    def addProjection(self, source, dest):
         if source is not dest:
-            edge = Edge(source, dest)
+            edge = Projection(source, dest, self.synapsedict)
             for e in self.items():
-                if e.type == ItemType.EDGE and e.isSameTo(edge):
+                if e.type == ItemType.PROJECTION and e.isSameTo(edge):
                     return
             self.addItem(edge)
+            self.info_stack.addWidget(edge.info)
+            edge.info.sig_synapse.connect(self.updateSynapsedict)
             self.source = None
             self.dest = None
-            self.update()
 
-    def removeEdgesOf(self, item):
+    def addPopulation(self, p):
+        item = Population(self.neuronsdict)
+        item.setPos(p)
+        self.addItem(item)
+        self.info_stack.addWidget(item.info)
+        item.info.sig_neuron.connect(self.updateNeurondict)
+
+    def removeProjectionsOf(self, item):
         for edge in self.items():
-            if edge.type == ItemType.EDGE and edge.contains(item.pos()):
+            if edge.type == ItemType.PROJECTION and edge.contains(item.pos()):
                 self.removeItem(edge)
+                self.info_stack.removeWidget(edge.info)
                 self.update()
 
     def mouseMoveEvent(self, e):
         super(MyScene, self).mouseMoveEvent(e)
         if e.buttons() == Qt.LeftButton:
             for edge in self.items():
-                if edge.type == ItemType.EDGE:
+                if edge.type == ItemType.PROJECTION:
                     edge.update()
         self.update()
 
     def mousePressEvent(self, e):
         super(MyScene, self).mousePressEvent(e)
         self.currentItem = self.itemAt(e.scenePos())
-        if self.currentItem and self.currentItem.type == ItemType.NEURON:
-            # emit a signal with index of currentItem.info
+        if self.currentItem and self.currentItem.type == ItemType.POPULATION:
+            # show info of currentItem
             index = self.info_stack.indexOf(self.currentItem.info)
             self.info_stack.setCurrentIndex(index)
-            # show info of currentItem
             if e.button() == Qt.LeftButton:
-                self.item_data = self.currentItem.info.data
-                self.replot.emit()
+                self.item_data = self.currentItem.info.currentData
+                self.sig_replot.emit()
             if e.button() == Qt.RightButton:
                 self.source = self.currentItem
 
-        # here edit the selected line if necessary
-        # if self.currentItem and self.currentItem.type == ItemType.EDGE:
-        #     print self.currentItem.line()
+        if self.currentItem and self.currentItem.type == ItemType.PROJECTION:
+            # show info of currentItem
+            index = self.info_stack.indexOf(self.currentItem.info)
+            self.info_stack.setCurrentIndex(index)
+            if e.button() == Qt.LeftButton:
+                self.item_data = self.currentItem.info.currentData
 
         if self.currentItem is None:
             if e.button() == Qt.LeftButton and self.isPrepared:
-                item = Population()
-                item.setPos(e.scenePos())
-                self.addItem(item)
-                self.info_stack.addWidget(item.info)
+                self.addPopulation(e.scenePos())
+
         self.update()
 
     def mouseReleaseEvent(self, e):
         super(MyScene, self).mouseReleaseEvent(e)
         if e.button() == Qt.RightButton and self.source:
             self.dest = self.itemAt(e.scenePos())
-            if self.dest and self.dest.type == ItemType.NEURON:
-                self.addEdge(self.source, self.dest)
+            if self.dest and self.dest.type == ItemType.POPULATION:
+                self.addProjection(self.source, self.dest)
                 self.update()
 
     def mouseDoubleClickEvent(self, e):
-        if self.currentItem and self.currentItem.type == ItemType.NEURON:
-            if e.button() == Qt.LeftButton:
-                index = self.currentItem.info.ui.neuron_type.currentIndex()
-                self.currentItem.info.open_Dialog(index)
+        if self.currentItem and e.button() == Qt.LeftButton:
+            if self.currentItem.type == ItemType.POPULATION:
+                self.currentItem.info.openDialog(self.currentItem.info.currentData.get("neuron"))
+            if self.currentItem.type == ItemType.PROJECTION:
+                self.currentItem.info.openDialog(self.currentItem.info.currentData.get("synapse"))
 
 
-class Edge(QGraphicsLineItem):
+class Projection(QGraphicsLineItem):
     OffSet = 40
-    ArrowSize = 11
+    ArrowSize = 15
 
-    def __init__(self, sourceNode, destNode):
-        super(Edge, self).__init__()
-        self.type = ItemType.EDGE
-        self.setAcceptedMouseButtons(Qt.NoButton)
+    def __init__(self, sourceNode, destNode, synapsedict=None):
+        super(Projection, self).__init__()
 
+        self.type = ItemType.PROJECTION
         self.source = sourceNode
         self.dest = destNode
 
         self.pen = QPen()
         self.pen.setWidth(5)
-        self.pen.setStyle(Qt.DotLine)
+        # self.pen.setStyle(Qt.DotLine)
         self.setPen(self.pen)
 
         self.sourcePoint = self.source.scenePos()
         self.destPoint = self.dest.scenePos()
         self.l = QLineF(self.sourcePoint, self.destPoint)
-        self.l.setLength(self.l.length() - Edge.OffSet * math.sqrt(2))
+        self.l.setLength(self.l.length() - Projection.OffSet * math.sqrt(2))
         self.setLine(self.l)
+
+        if type(synapsedict) == dict:
+            self.info = Informations.ProjectionInfo(self.source, self.dest, synapsedict)
+        else:
+            self.info = Informations.ProjectionInfo(self.source, self.dest)
 
     def isSameTo(self, edge):
         if (edge.source == self.source and edge.dest == self.dest) or (
@@ -191,21 +225,29 @@ class Edge(QGraphicsLineItem):
         if p == self.sourcePoint or p == self.destPoint:
             return True
         else:
-            return False
+            return super(Projection, self).contains(p)
 
     def update(self):
-        super(Edge, self).update()
+        super(Projection, self).update()
         self.sourcePoint = self.source.scenePos()
         self.destPoint = self.dest.scenePos()
         self.l = QLineF(self.sourcePoint, self.destPoint)
-        self.l.setLength(self.l.length() - Edge.OffSet * math.sqrt(2))
+        if self.l.length() > Projection.OffSet * math.sqrt(2):
+            self.l.setLength(self.l.length() - Projection.OffSet * math.sqrt(2))
+        else:
+            self.l.setLength(0)
         self.setLine(self.l)
+        self.info.update()
 
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget = None):
-        super(Edge, self).paint(QPainter, QStyleOptionGraphicsItem, None)
+    def boundingRect(self):
+        return QRectF(self.sourcePoint.x(), self.sourcePoint.y(), self.destPoint.x() - self.sourcePoint.x(),
+                      self.destPoint.y() - self.sourcePoint.y())
+
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
+        super(Projection, self).paint(QPainter, QStyleOptionGraphicsItem, None)
         # begin draw Arrow
         v1 = self.l.unitVector()
-        v1.setLength(Edge.ArrowSize)
+        v1.setLength(Projection.ArrowSize)
         # this is very important
         v1.translate(QPointF(self.l.dx(), self.l.dy()))
 
@@ -234,17 +276,24 @@ class Edge(QGraphicsLineItem):
 class Population(QGraphicsItem):
     SIZE = 80
 
-    def __init__(self):
+    def __init__(self, neurondict=None):
         super(Population, self).__init__()
-        self.type = ItemType.NEURON
+        self.type = ItemType.POPULATION
         self.pix = QPixmap("image/neuron.png").scaled(Population.SIZE, Population.SIZE)
         self.setFlag(QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemIsSelectable)
         # make sure items alway above edges
         self.setZValue(1)
-        self.info = info.InfoWidget()
+
+        if neurondict:
+            self.info = Informations.PopulationInfo(neurondict)
+        else:
+            self.info = Informations.PopulationInfo()
 
     def boundingRect(self):
         return QRectF(-self.pix.width() / 2, -self.pix.height() / 2, self.pix.width(), self.pix.height())
 
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget = None):
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
         QPainter.drawPixmap(-self.pix.width() / 2, -self.pix.height() / 2, self.pix)
+        if self.isSelected():
+            QPainter.drawRoundRect(self.boundingRect())
