@@ -42,13 +42,6 @@ class Ui_Dialog(object):
         self.lineEdit_name = QtGui.QLineEdit(self.tab_basic)
         self.lineEdit_name.setObjectName(_fromUtf8("lineEdit_name"))
         self.horizontalLayout.addWidget(self.lineEdit_name)
-        self.label_9 = QtGui.QLabel(self.tab_basic)
-        self.label_9.setObjectName(_fromUtf8("label_9"))
-        self.horizontalLayout.addWidget(self.label_9)
-        self.comboBox = QtGui.QComboBox(self.tab_basic)
-        self.comboBox.setObjectName(_fromUtf8("comboBox"))
-        self.comboBox.addItem(_fromUtf8(""))
-        self.horizontalLayout.addWidget(self.comboBox)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.label_7 = QtGui.QLabel(self.tab_basic)
         self.label_7.setObjectName(_fromUtf8("label_7"))
@@ -66,6 +59,7 @@ class Ui_Dialog(object):
         self.label.setObjectName(_fromUtf8("label"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
         self.plainTextEdit_parameter = QtGui.QPlainTextEdit(self.tab_parameter)
+        self.plainTextEdit_parameter.setPlainText(_fromUtf8(""))
         self.plainTextEdit_parameter.setObjectName(_fromUtf8("plainTextEdit_parameter"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.plainTextEdit_parameter)
         self.label_2 = QtGui.QLabel(self.tab_parameter)
@@ -117,16 +111,9 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(_translate("Dialog", "Synapse", None))
         self.label_6.setText(_translate("Dialog", "Name:", None))
-        self.label_9.setText(_translate("Dialog", "pattern:", None))
-        self.comboBox.setItemText(0, _translate("Dialog", "disabled", None))
         self.label_7.setText(_translate("Dialog", "description:", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_basic), _translate("Dialog", "Basic", None))
         self.label.setText(_translate("Dialog", "Parameter:", None))
-        self.plainTextEdit_parameter.setPlainText(_translate("Dialog", "tau_pre = 10.0 : post-synaptic\n"
-"tau_post = 10.0 : post-synaptic\n"
-"cApre = 0.01 : post-synaptic\n"
-"cApost = 0.0105 : post-synaptic\n"
-"wmax = 0.01 : post-synaptic", None))
         self.label_2.setText(_translate("Dialog", "Equation:", None))
         self.label_8.setText(_translate("Dialog", "Functions:", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_parameter), _translate("Dialog", "Parameter", None))

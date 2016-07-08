@@ -40,6 +40,7 @@ class Ui_Dialog(object):
         self.label_5.setObjectName(_fromUtf8("label_5"))
         self.horizontalLayout.addWidget(self.label_5)
         self.neurontype = QtGui.QLineEdit(self.tab)
+        self.neurontype.setText(_fromUtf8(""))
         self.neurontype.setObjectName(_fromUtf8("neurontype"))
         self.horizontalLayout.addWidget(self.neurontype)
         self.label_8 = QtGui.QLabel(self.tab)
@@ -79,9 +80,11 @@ class Ui_Dialog(object):
         self.label_7.setObjectName(_fromUtf8("label_7"))
         self.formLayout_2.setWidget(3, QtGui.QFormLayout.LabelRole, self.label_7)
         self.parameter = QtGui.QPlainTextEdit(self.tab_2)
+        self.parameter.setPlainText(_fromUtf8(""))
         self.parameter.setObjectName(_fromUtf8("parameter"))
         self.formLayout_2.setWidget(1, QtGui.QFormLayout.FieldRole, self.parameter)
         self.equation = QtGui.QPlainTextEdit(self.tab_2)
+        self.equation.setPlainText(_fromUtf8(""))
         self.equation.setObjectName(_fromUtf8("equation"))
         self.formLayout_2.setWidget(2, QtGui.QFormLayout.FieldRole, self.equation)
         self.tabWidget.addTab(self.tab_2, _fromUtf8(""))
@@ -96,9 +99,11 @@ class Ui_Dialog(object):
         self.label_4.setObjectName(_fromUtf8("label_4"))
         self.formLayout_3.setWidget(2, QtGui.QFormLayout.LabelRole, self.label_4)
         self.spike = QtGui.QPlainTextEdit(self.tab_3)
+        self.spike.setPlainText(_fromUtf8(""))
         self.spike.setObjectName(_fromUtf8("spike"))
         self.formLayout_3.setWidget(1, QtGui.QFormLayout.FieldRole, self.spike)
         self.reset = QtGui.QPlainTextEdit(self.tab_3)
+        self.reset.setPlainText(_fromUtf8(""))
         self.reset.setObjectName(_fromUtf8("reset"))
         self.formLayout_3.setWidget(3, QtGui.QFormLayout.FieldRole, self.reset)
         self.tabWidget.addTab(self.tab_3, _fromUtf8(""))
@@ -116,7 +121,6 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(_translate("Dialog", "Neuron", None))
         self.label_5.setText(_translate("Dialog", "Neuron Type", None))
-        self.neurontype.setText(_translate("Dialog", "Izhikevich", None))
         self.label_8.setText(_translate("Dialog", "refractory:", None))
         self.label_9.setText(_translate("Dialog", "(ms)", None))
         self.label_6.setText(_translate("Dialog", "Description:", None))
@@ -124,21 +128,9 @@ class Ui_Dialog(object):
         self.label_3.setText(_translate("Dialog", "Equation:", None))
         self.label.setText(_translate("Dialog", "Parameters:", None))
         self.label_7.setText(_translate("Dialog", "Functions:", None))
-        self.parameter.setPlainText(_translate("Dialog", "noise = 5.0 : population\n"
-"a = 0.02\n"
-"b = 0.2\n"
-"c = -65.0\n"
-"d = 2.0\n"
-"v_thresh = 30.0", None))
-        self.equation.setPlainText(_translate("Dialog", "I = g_exc - g_inh + noise * Normal(0.0, 1.0)\n"
-"dv/dt = 0.04 * v^2 + 5.0 * v + 140.0 - u + I\n"
-"du/dt = a * (b*v - u)", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Dialog", "parser", None))
         self.label_2.setText(_translate("Dialog", "Spike", None))
         self.label_4.setText(_translate("Dialog", "Reset", None))
-        self.spike.setPlainText(_translate("Dialog", " v >= v_thresh", None))
-        self.reset.setPlainText(_translate("Dialog", "v = c\n"
-"u += d", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Dialog", "spike", None))
 
 

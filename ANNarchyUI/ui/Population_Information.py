@@ -27,7 +27,7 @@ class Ui_Form(object):
         Form.setObjectName(_fromUtf8("Form"))
         Form.resize(196, 450)
         self.verticalLayout = QtGui.QVBoxLayout(Form)
-        self.verticalLayout.setContentsMargins(-1, 40, -1, 50)
+        self.verticalLayout.setContentsMargins(-1, 40, -1, -1)
         self.verticalLayout.setSpacing(15)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.label = QtGui.QLabel(Form)

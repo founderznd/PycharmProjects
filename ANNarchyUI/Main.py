@@ -145,6 +145,9 @@ class MainWindow(QMainWindow):
         )
 
         proj.connect_all_to_all(weights=Uniform(0.0, 0.01))
+        #connector = self.info_stack.currentWidget().ui.comboBox_connectivity.currentText()
+        connector = self.ui.gview_network.scene.currentItem.info.ui.comboBox_connectivity.currentText()
+        print connector
 
         compile()
 

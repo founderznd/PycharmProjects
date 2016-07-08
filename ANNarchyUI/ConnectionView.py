@@ -82,7 +82,10 @@ class MyScene(QGraphicsScene):
         self.setSceneRect(0, 0, 1920, 1080)
         self.item_data = dict()
         self.neuronsdict = dict()
+        self.neuronlist = list()
         self.synapsedict = dict()
+        self.synapselist = list()
+        self.connectorlist = list()
         self.source = None
         self.dest = None
         self.currentItem = None
@@ -98,33 +101,42 @@ class MyScene(QGraphicsScene):
             self.currentItem.info.update()
 
     # synchronize neuron types to all Populations
-    def updateNeurondict(self, nd):
+    def updateNeurondict(self, nd, nl):
         self.neuronsdict.update(nd)
+        self.neuronlist = nl
         for item in self.items():
             if item.type == ItemType.POPULATION:
-                item.info.synchronizeDict(self.neuronsdict)
+                item.info.synchronizeDict(self.neuronsdict, self.neuronlist)
 
     # synchronize synapse types to all Projections
-    def updateSynapsedict(self, sd):
+    def updateSynapsedict(self, sd, sl):
         self.synapsedict.update(sd)
+        self.synapselist = sl
         for item in self.items():
             if item.type == ItemType.PROJECTION:
-                item.info.synchronizeDict(self.synapsedict)
+                item.info.synchronizeDict(self.synapsedict, self.synapselist)
+
+    def updateConnectorlist(self, cl):
+        self.connectorlist = cl
+        for item in self.items():
+            if item.type == ItemType.PROJECTION:
+                item.info.sychronizeConnector(self.connectorlist)
 
     def addProjection(self, source, dest):
         if source is not dest:
-            edge = Projection(source, dest, self.synapsedict)
+            edge = Projection(source, dest, self.synapsedict, self.synapselist, self.connectorlist)
             for e in self.items():
                 if e.type == ItemType.PROJECTION and e.isSameTo(edge):
                     return
             self.addItem(edge)
             self.info_stack.addWidget(edge.info)
             edge.info.sig_synapse.connect(self.updateSynapsedict)
+            edge.info.sig_connector.connect(self.updateConnectorlist)
             self.source = None
             self.dest = None
 
     def addPopulation(self, p):
-        item = Population(self.neuronsdict)
+        item = Population(self.neuronsdict, self.neuronlist)
         item.setPos(p)
         self.addItem(item)
         self.info_stack.addWidget(item.info)
@@ -133,8 +145,8 @@ class MyScene(QGraphicsScene):
     def removeProjectionsOf(self, item):
         for edge in self.items():
             if edge.type == ItemType.PROJECTION and edge.contains(item.pos()):
-                self.removeItem(edge)
                 self.info_stack.removeWidget(edge.info)
+                self.removeItem(edge)
                 self.update()
 
     def mouseMoveEvent(self, e):
@@ -157,7 +169,6 @@ class MyScene(QGraphicsScene):
                 self.sig_replot.emit()
             if e.button() == Qt.RightButton:
                 self.source = self.currentItem
-
         if self.currentItem and self.currentItem.type == ItemType.PROJECTION:
             # show info of currentItem
             index = self.info_stack.indexOf(self.currentItem.info)
@@ -182,35 +193,43 @@ class MyScene(QGraphicsScene):
     def mouseDoubleClickEvent(self, e):
         if self.currentItem and e.button() == Qt.LeftButton:
             if self.currentItem.type == ItemType.POPULATION:
-                self.currentItem.info.openDialog(self.currentItem.info.currentData.get("neuron"))
+                self.currentItem.info.openNeuronDefinition(self.currentItem.info.currentData.get("neuron"))
             if self.currentItem.type == ItemType.PROJECTION:
-                self.currentItem.info.openDialog(self.currentItem.info.currentData.get("synapse"))
+                self.currentItem.info.openSynapseDefinition(self.currentItem.info.currentData.get("synapse"))
 
 
 class Projection(QGraphicsLineItem):
     OffSet = 40
-    ArrowSize = 15
+    SelectRange = 30
+    ArrowSize = 10
+    LineWidth = 3
 
-    def __init__(self, sourceNode, destNode, synapsedict=None):
+    def __init__(self, sourceNode, destNode, synapsedict=None, synapselist=None, connectorlist=None):
         super(Projection, self).__init__()
+
+        self.setFlag(QGraphicsItem.ItemIsSelectable)
 
         self.type = ItemType.PROJECTION
         self.source = sourceNode
         self.dest = destNode
 
-        self.pen = QPen()
-        self.pen.setWidth(5)
-        # self.pen.setStyle(Qt.DotLine)
-        self.setPen(self.pen)
-
         self.sourcePoint = self.source.scenePos()
         self.destPoint = self.dest.scenePos()
-        self.l = QLineF(self.sourcePoint, self.destPoint)
-        self.l.setLength(self.l.length() - Projection.OffSet * math.sqrt(2))
-        self.setLine(self.l)
 
-        if type(synapsedict) == dict:
-            self.info = Informations.ProjectionInfo(self.source, self.dest, synapsedict)
+        l = QLineF(self.sourcePoint, self.destPoint)
+        l.setLength(l.length() - Projection.OffSet * math.sqrt(2))
+        self.endPoint = l.p2()
+        l.setLength(Projection.OffSet * math.sqrt(2))
+        self.beginPoint = l.p2()
+
+        # this is actually setup the range of selection
+        pen = QPen()
+        pen.setWidth(Projection.SelectRange)
+        self.setPen(pen)
+        self.setLine(QLineF(self.sourcePoint, self.destPoint))
+
+        if type(synapsedict) == dict or type(synapselist) == list or type(connectorlist):
+            self.info = Informations.ProjectionInfo(self.source, self.dest, synapsedict, synapselist, connectorlist)
         else:
             self.info = Informations.ProjectionInfo(self.source, self.dest)
 
@@ -231,12 +250,14 @@ class Projection(QGraphicsLineItem):
         super(Projection, self).update()
         self.sourcePoint = self.source.scenePos()
         self.destPoint = self.dest.scenePos()
-        self.l = QLineF(self.sourcePoint, self.destPoint)
-        if self.l.length() > Projection.OffSet * math.sqrt(2):
-            self.l.setLength(self.l.length() - Projection.OffSet * math.sqrt(2))
-        else:
-            self.l.setLength(0)
-        self.setLine(self.l)
+
+        l = QLineF(self.sourcePoint, self.destPoint)
+        l.setLength(l.length() - Projection.OffSet * math.sqrt(2))
+        self.endPoint = l.p2()
+        l.setLength(Projection.OffSet * math.sqrt(2))
+        self.beginPoint = l.p2()
+        self.setLine(QLineF(self.sourcePoint, self.destPoint))
+
         self.info.update()
 
     def boundingRect(self):
@@ -244,39 +265,47 @@ class Projection(QGraphicsLineItem):
                       self.destPoint.y() - self.sourcePoint.y())
 
     def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
-        super(Projection, self).paint(QPainter, QStyleOptionGraphicsItem, None)
-        # begin draw Arrow
-        v1 = self.l.unitVector()
-        v1.setLength(Projection.ArrowSize)
-        # this is very important
-        v1.translate(QPointF(self.l.dx(), self.l.dy()))
-
-        p1 = v1.p2()
-        v2 = v1.normalVector()
-        v2.setLength(v1.length() * 0.4)
-        p2 = v2.p2()
-        v3 = v2.normalVector().normalVector()
-        p3 = v3.p2()
-
-        arrow = QPolygonF([p1, p2, p3, p1])
-
-        path = QPainterPath()
-        path.addPolygon(arrow)
         pen = QPen()
+        pen.setWidth(Projection.LineWidth)
         pen.setJoinStyle(Qt.MiterJoin)
-        QPainter.setPen(pen)
+        # pen.setStyle(Qt.DotLine)
+
         brush = QBrush()
-        brush.setColor(Qt.black)
         brush.setStyle(Qt.SolidPattern)
+
+        if self.isSelected():
+            pen.setColor(Qt.red)
+            brush.setColor(Qt.red)
+
+        QPainter.setPen(pen)
         QPainter.setBrush(brush)
 
-        QPainter.drawPath(path)
+        # begin draw Arrow
+        l = QLineF(self.beginPoint, self.endPoint)
+        v1 = l.unitVector()
+        l.setLength(l.length() - Projection.OffSet * math.sqrt(2))
+        v1.setLength(Projection.ArrowSize)
+        # this is very important
+        v1.translate(self.endPoint - self.beginPoint)
+
+        v2 = v1.normalVector()
+        v2.setLength(v1.length() * 0.4)
+        v3 = v2.normalVector().normalVector()
+
+        p1 = v1.p2()
+        p2 = v2.p2()
+        p3 = v3.p2()
+
+        dist = QLineF(self.sourcePoint, self.destPoint)
+        if dist.length() > Population.SIZE * math.sqrt(2):
+            QPainter.drawLine(QLineF(self.beginPoint, self.endPoint))
+            QPainter.drawPolygon(p1, p2, p3)
 
 
 class Population(QGraphicsItem):
     SIZE = 80
 
-    def __init__(self, neurondict=None):
+    def __init__(self, neurondict=None, neuronlist=None):
         super(Population, self).__init__()
         self.type = ItemType.POPULATION
         self.pix = QPixmap("image/neuron.png").scaled(Population.SIZE, Population.SIZE)
@@ -286,7 +315,7 @@ class Population(QGraphicsItem):
         self.setZValue(1)
 
         if neurondict:
-            self.info = Informations.PopulationInfo(neurondict)
+            self.info = Informations.PopulationInfo(neurondict, neuronlist)
         else:
             self.info = Informations.PopulationInfo()
 

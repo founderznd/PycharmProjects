@@ -36,22 +36,6 @@
          <item>
           <widget class="QLineEdit" name="lineEdit_name"/>
          </item>
-         <item>
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>pattern:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="comboBox">
-           <item>
-            <property name="text">
-             <string>disabled</string>
-            </property>
-           </item>
-          </widget>
-         </item>
         </layout>
        </item>
        <item>
@@ -84,11 +68,7 @@
        <item row="0" column="1">
         <widget class="QPlainTextEdit" name="plainTextEdit_parameter">
          <property name="plainText">
-          <string>tau_pre = 10.0 : post-synaptic
-tau_post = 10.0 : post-synaptic
-cApre = 0.01 : post-synaptic
-cApost = 0.0105 : post-synaptic
-wmax = 0.01 : post-synaptic</string>
+          <string/>
          </property>
         </widget>
        </item>
