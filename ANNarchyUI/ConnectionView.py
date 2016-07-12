@@ -205,7 +205,7 @@ class Projection(QGraphicsLineItem):
     ArrowSize = 10
     LineWidth = 3
 
-    def __init__(self, sourceNode, destNode, synapsedict=None, synapselist=None, connectorlist=None):
+    def __init__(self, sourceNode, destNode, synapsedict = None, synapselist = None, connectorlist = None):
         super(Projection, self).__init__()
 
         self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -265,7 +265,7 @@ class Projection(QGraphicsLineItem):
         return QRectF(self.sourcePoint.x(), self.sourcePoint.y(), self.destPoint.x() - self.sourcePoint.x(),
                       self.destPoint.y() - self.sourcePoint.y())
 
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget = None):
         pen = QPen()
         pen.setWidth(Projection.LineWidth)
         pen.setJoinStyle(Qt.MiterJoin)
@@ -306,7 +306,7 @@ class Projection(QGraphicsLineItem):
 class Population(QGraphicsItem):
     SIZE = 80
 
-    def __init__(self, neurondict=None, neuronlist=None):
+    def __init__(self, neurondict = None, neuronlist = None):
         super(Population, self).__init__()
         self.type = ItemType.POPULATION
         self.pix = QPixmap("image/neuron.png").scaled(Population.SIZE, Population.SIZE)
@@ -323,7 +323,7 @@ class Population(QGraphicsItem):
     def boundingRect(self):
         return QRectF(-self.pix.width() / 2, -self.pix.height() / 2, self.pix.width(), self.pix.height())
 
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget = None):
         QPainter.drawPixmap(-self.pix.width() / 2, -self.pix.height() / 2, self.pix)
         if self.isSelected():
             QPainter.drawRoundRect(self.boundingRect())
