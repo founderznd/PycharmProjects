@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(196, 450)
+        Form.resize(204, 450)
         self.verticalLayout = QtGui.QVBoxLayout(Form)
         self.verticalLayout.setContentsMargins(-1, 40, -1, -1)
         self.verticalLayout.setSpacing(15)
@@ -110,7 +110,7 @@ class Ui_Form(object):
         self.label_3.setText(_translate("Form", "pos_Pop:", None))
         self.label_pos_Pop.setText(_translate("Form", "TextLabel", None))
         self.label_6.setText(_translate("Form", "Connectivity", None))
-        self.comboBox_connectivity.setItemText(0, _translate("Form", "Define Own...", None))
+        self.comboBox_connectivity.setItemText(0, _translate("Form", "New Connector", None))
         self.comboBox_connectivity.setItemText(1, _translate("Form", "connect_all_to_all", None))
         self.comboBox_connectivity.setItemText(2, _translate("Form", "connect_dog", None))
         self.comboBox_connectivity.setItemText(3, _translate("Form", "connect_fixed_number_post", None))

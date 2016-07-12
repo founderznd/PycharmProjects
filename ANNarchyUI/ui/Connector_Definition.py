@@ -43,15 +43,9 @@ class Ui_Dialog(object):
         self.page_defineown.setObjectName(_fromUtf8("page_defineown"))
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.page_defineown)
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
-        self.horizontalLayout_4 = QtGui.QHBoxLayout()
-        self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
-        self.label_43 = QtGui.QLabel(self.page_defineown)
-        self.label_43.setObjectName(_fromUtf8("label_43"))
-        self.horizontalLayout_4.addWidget(self.label_43)
-        self.page_defineown_name = QtGui.QLineEdit(self.page_defineown)
-        self.page_defineown_name.setObjectName(_fromUtf8("page_defineown_name"))
-        self.horizontalLayout_4.addWidget(self.page_defineown_name)
-        self.verticalLayout_3.addLayout(self.horizontalLayout_4)
+        self.textBrowser = QtGui.QTextBrowser(self.page_defineown)
+        self.textBrowser.setObjectName(_fromUtf8("textBrowser"))
+        self.verticalLayout_3.addWidget(self.textBrowser)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout_3.addItem(spacerItem)
         self.stackedWidget.addWidget(self.page_defineown)
@@ -400,7 +394,7 @@ class Ui_Dialog(object):
         self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(Dialog)
-        self.stackedWidget.setCurrentIndex(11)
+        self.stackedWidget.setCurrentIndex(0)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Dialog.accept)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -408,7 +402,12 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(_translate("Dialog", "Connector", None))
         self.label_6.setText(_translate("Dialog", "Connectivity", None))
-        self.label_43.setText(_translate("Dialog", "connector type", None))
+        self.textBrowser.setHtml(_translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'Noto Sans\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">1 how to create a new widget and add it into a list?</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">2 how to synchronize this list with other connector</p></body></html>", None))
         self.label_2.setText(_translate("Dialog", "weights", None))
         self.label_3.setText(_translate("Dialog", "delays", None))
         self.label_4.setText(_translate("Dialog", "allow_self_connections", None))

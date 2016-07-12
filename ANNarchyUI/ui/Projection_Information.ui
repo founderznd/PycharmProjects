@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>196</width>
+    <width>204</width>
     <height>450</height>
    </rect>
   </property>
@@ -122,7 +122,7 @@
     <widget class="QComboBox" name="comboBox_connectivity">
      <item>
       <property name="text">
-       <string>Define Own...</string>
+       <string>New Connector</string>
       </property>
      </item>
      <item>
