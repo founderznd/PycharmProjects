@@ -60,13 +60,14 @@ class NeuralConnectionView(QGraphicsView):
 
     # delete currentItem when press "del" on keyboard
     def keyPressEvent(self, e):
-        if self.scene.currentItem and self.scene.currentItem.type == ItemType.POPULATION:
-            if e.key() == Qt.Key_Delete:
+        if self.scene.currentItem and e.key() == Qt.Key_Delete:
+            self.scene.removeItem(self.scene.currentItem)
+            self.scene.info_stack.removeWidget(self.scene.currentItem.info)
+            self.scene.currentItem = None
+            self.scene.sig_replot.emit()
+            if self.scene.currentItem.type == ItemType.POPULATION:
                 self.scene.removeProjectionsOf(self.scene.currentItem)
-                self.scene.info_stack.removeWidget(self.scene.currentItem.info)
-                self.scene.removeItem(self.scene.currentItem)
-                self.scene.currentItem = None
-                self.scene.sig_replot.emit()
+
         if e.key() == Qt.Key_Escape:
             self.population_button.setChecked(False)
             self.scene.isPrepared = False
@@ -217,7 +218,7 @@ class Projection(QGraphicsLineItem):
         self.destPoint = self.dest.scenePos()
 
         l = QLineF(self.sourcePoint, self.destPoint)
-        l.setLength(l.length() - Projection.OffSet * math.sqrt(2))
+        l.setLength(l.length() - Projection.OffSet * math.sqrt(2) - Projection.ArrowSize)
         self.endPoint = l.p2()
         l.setLength(Projection.OffSet * math.sqrt(2))
         self.beginPoint = l.p2()
@@ -252,7 +253,7 @@ class Projection(QGraphicsLineItem):
         self.destPoint = self.dest.scenePos()
 
         l = QLineF(self.sourcePoint, self.destPoint)
-        l.setLength(l.length() - Projection.OffSet * math.sqrt(2))
+        l.setLength(l.length() - Projection.OffSet * math.sqrt(2) - Projection.ArrowSize)
         self.endPoint = l.p2()
         l.setLength(Projection.OffSet * math.sqrt(2))
         self.beginPoint = l.p2()
@@ -297,7 +298,7 @@ class Projection(QGraphicsLineItem):
         p3 = v3.p2()
 
         dist = QLineF(self.sourcePoint, self.destPoint)
-        if dist.length() > Population.SIZE * math.sqrt(2):
+        if dist.length() > Population.SIZE * math.sqrt(2) + Projection.ArrowSize:
             QPainter.drawLine(QLineF(self.beginPoint, self.endPoint))
             QPainter.drawPolygon(p1, p2, p3)
 
