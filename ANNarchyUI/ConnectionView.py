@@ -61,12 +61,12 @@ class NeuralConnectionView(QGraphicsView):
     # delete currentItem when press "del" on keyboard
     def keyPressEvent(self, e):
         if self.scene.currentItem and e.key() == Qt.Key_Delete:
+            if self.scene.currentItem.type == ItemType.POPULATION:
+                self.scene.removeProjectionsOf(self.scene.currentItem)
             self.scene.removeItem(self.scene.currentItem)
             self.scene.info_stack.removeWidget(self.scene.currentItem.info)
             self.scene.currentItem = None
             self.scene.sig_replot.emit()
-            if self.scene.currentItem.type == ItemType.POPULATION:
-                self.scene.removeProjectionsOf(self.scene.currentItem)
 
         if e.key() == Qt.Key_Escape:
             self.population_button.setChecked(False)
