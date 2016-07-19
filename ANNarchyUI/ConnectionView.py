@@ -82,16 +82,100 @@ class MyScene(QGraphicsScene):
         self.setItemIndexMethod(QGraphicsScene.BspTreeIndex)
         self.setSceneRect(0, 0, 1920, 1080)
         self.item_data = dict()
-        self.neuronsdict = dict()
-        self.neuronlist = list()
+        self.neurondict = dict()
+        self.neuronlist = [
+            QString("Define Own..."),
+            QString("LeakyIntegratorNeuron"),
+            QString("Izhikevich"),
+        ]
+        # neurondict initialization
+        self.neurondict.update({
+            "LeakyIntegratorNeuron": {
+                "name"       : "LeakyIntegratorNeuron",
+
+                "parameters" : "tau = 10.0\n"
+                               "baseline = -0.2",
+
+                "equations"  : "tau * dmp/dt + mp = baseline + sum(exc)\n"
+                               "r = pos(mp)",
+
+                "functions"  : "sigmoid(x) = 1.0 / (1.0 + exp(-x))",
+
+                "spike"      : "",
+                "reset"      : "",
+                "refractory" : 0,
+                "description": ""
+            }
+        })
+        self.neurondict.update({
+            "Izhikevich": {
+                "name"       : "Izhikevich",
+
+                "description": "This script reproduces the simple pulse-coupled network proposed by Eugene Izhikevich "
+                               "in the article:Izhikevich, E.M. (2003). Simple Model of Spiking Neurons, "
+                               "IEEE Transaction on Neural Networks, 14:6.",
+
+                "parameters" : "noise = 5.0 : population\n"
+                               "a = 0.02\n"
+                               "b = 0.2\n"
+                               "c = -65.0\n"
+                               "d = 2.0\n"
+                               "v_thresh = 30.0",
+
+                "equations"  : "I = g_exc - g_inh + noise * Normal(0.0, 1.0)\n"
+                               "dv/dt = 0.04 * v^2 + 5.0 * v + 140.0-u + I\n"
+                               "du/dt = a * (b*v - u)",
+
+                "functions"  : "",
+
+                "spike"      : "v >= v_thresh",
+
+                "reset"      : "v = c\n"
+                               "u += d",
+
+                "refractory" : 0
+            }
+        })
         self.synapsedict = dict()
-        self.synapselist = list()
-        self.connectorlist = list()
+        self.synapselist = [
+            QString("Define Own..."),
+            QString("Oja"),
+            QString("Spiking synapse")
+        ]
+        self.synapsedict.update({
+            "Oja": {
+                "parameters" : "tau = 5000\n"
+                               "alpha = 8.0",
+                "equations"  : "tau * dw / dt = pre.r * post.r - alpha * post.r^2 * w",
+                "psp"        : "",
+                "pre_spike"  : "",
+                "post_spike" : "",
+                "functions"  : "product(x,y) = x * y",
+                "name"       : "Oja",
+                "description": ""
+            }
+        })
+        self.synapsedict.update({
+            "Spiking synapse": {
+                "parameters" : "",
+                "equations"  : "",
+                "psp"        : "",
+                "pre_spike"  : "",
+                "post_spike" : "",
+                "functions"  : "",
+                "name"       : "Spiking synapse",
+                "description": ""
+            }
+        })
+        # self.connectorlist = list()
         self.source = None
         self.dest = None
         self.currentItem = None
         self.isPrepared = False
         self.info_stack = QStackedWidget()
+
+    def setPrepared(self, isPrepared):
+        self.isPrepared = isPrepared
 
     def update(self, *__args):
         super(MyScene, self).update()
@@ -103,11 +187,11 @@ class MyScene(QGraphicsScene):
 
     # synchronize neuron types to all Populations
     def updateNeurondict(self, nd, nl):
-        self.neuronsdict.update(nd)
+        self.neurondict.update(nd)
         self.neuronlist = nl
         for item in self.items():
             if item.type == ItemType.POPULATION:
-                item.info.synchronizeDict(self.neuronsdict, self.neuronlist)
+                item.info.synchronizeDict(self.neurondict, self.neuronlist)
 
     # synchronize synapse types to all Projections
     def updateSynapsedict(self, sd, sl):
@@ -117,45 +201,48 @@ class MyScene(QGraphicsScene):
             if item.type == ItemType.PROJECTION:
                 item.info.synchronizeDict(self.synapsedict, self.synapselist)
 
-    def updateConnectorlist(self, cl):
-        self.connectorlist = cl
-        for item in self.items():
-            if item.type == ItemType.PROJECTION:
-                item.info.sychronizeConnector(self.connectorlist)
+    # def updateConnectorlist(self, cl):
+    #     self.connectorlist = cl
+    #     for item in self.items():
+    #         if item.type == ItemType.PROJECTION:
+    #             item.info.sychronizeConnector(self.connectorlist)
 
     def addProjection(self, source, dest):
         if source is not dest:
-            edge = Projection(source, dest, self.synapsedict, self.synapselist, self.connectorlist)
+            # edge = Projection(source, dest, self.synapsedict, self.synapselist, self.connectorlist)
+            projection = Projection(source, dest, self.synapsedict, self.synapselist, None)
             for e in self.items():
-                if e.type == ItemType.PROJECTION and e.isSameTo(edge):
+                if e.type == ItemType.PROJECTION and e.isSameTo(projection):
                     return
-            self.addItem(edge)
-            self.info_stack.addWidget(edge.info)
-            edge.info.sig_synapse.connect(self.updateSynapsedict)
-            edge.info.sig_connector.connect(self.updateConnectorlist)
+            self.addItem(projection)
+            self.info_stack.addWidget(projection.info)
+            projection.info.sig_synapse.connect(self.updateSynapsedict)
+            # edge.info.sig_connector.connect(self.updateConnectorlist)
             self.source = None
             self.dest = None
+            return projection.info
 
     def addPopulation(self, p):
-        item = Population(self.neuronsdict, self.neuronlist)
+        item = Population(self.neurondict, self.neuronlist)
         item.setPos(p)
         self.addItem(item)
         self.info_stack.addWidget(item.info)
         item.info.sig_neuron.connect(self.updateNeurondict)
+        return item.info
 
     def removeProjectionsOf(self, item):
-        for edge in self.items():
-            if edge.type == ItemType.PROJECTION and edge.contains(item.pos()):
-                self.info_stack.removeWidget(edge.info)
-                self.removeItem(edge)
+        for proj in self.items():
+            if proj.type == ItemType.PROJECTION and proj.contains(item.pos()):
+                self.info_stack.removeWidget(proj.info)
+                self.removeItem(proj)
                 self.update()
 
     def mouseMoveEvent(self, e):
         super(MyScene, self).mouseMoveEvent(e)
         if e.buttons() == Qt.LeftButton:
-            for edge in self.items():
-                if edge.type == ItemType.PROJECTION:
-                    edge.update()
+            for proj in self.items():
+                if proj.type == ItemType.PROJECTION:
+                    proj.update()
         self.update()
 
     def mousePressEvent(self, e):
@@ -205,7 +292,7 @@ class Projection(QGraphicsLineItem):
     ArrowSize = 10
     LineWidth = 3
 
-    def __init__(self, sourceNode, destNode, synapsedict = None, synapselist = None, connectorlist = None):
+    def __init__(self, sourceNode, destNode, synapsedict=None, synapselist=None, connectorlist=None):
         super(Projection, self).__init__()
 
         self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -229,14 +316,15 @@ class Projection(QGraphicsLineItem):
         self.setPen(pen)
         self.setLine(QLineF(self.sourcePoint, self.destPoint))
 
-        if type(synapsedict) == dict or type(synapselist) == list or type(connectorlist):
+        # if type(synapsedict) == dict or type(synapselist) == list or type(connectorlist):
+        if type(synapsedict) == dict and type(synapselist) == list:
             self.info = Informations.ProjectionInfo(self.source, self.dest, synapsedict, synapselist, connectorlist)
         else:
             self.info = Informations.ProjectionInfo(self.source, self.dest)
 
-    def isSameTo(self, edge):
-        if (edge.source == self.source and edge.dest == self.dest) or (
-                        edge.source == self.dest and edge.dest == self.source):
+    def isSameTo(self, projection):
+        if (projection.source == self.source and projection.dest == self.dest) or (
+                        projection.source == self.dest and projection.dest == self.source):
             return True
         else:
             return False
@@ -265,7 +353,7 @@ class Projection(QGraphicsLineItem):
         return QRectF(self.sourcePoint.x(), self.sourcePoint.y(), self.destPoint.x() - self.sourcePoint.x(),
                       self.destPoint.y() - self.sourcePoint.y())
 
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget = None):
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
         pen = QPen()
         pen.setWidth(Projection.LineWidth)
         pen.setJoinStyle(Qt.MiterJoin)
@@ -306,7 +394,7 @@ class Projection(QGraphicsLineItem):
 class Population(QGraphicsItem):
     SIZE = 80
 
-    def __init__(self, neurondict = None, neuronlist = None):
+    def __init__(self, neurondict=None, neuronlist=None):
         super(Population, self).__init__()
         self.type = ItemType.POPULATION
         self.pix = QPixmap("image/neuron.png").scaled(Population.SIZE, Population.SIZE)
@@ -315,7 +403,7 @@ class Population(QGraphicsItem):
         # make sure items alway above edges
         self.setZValue(1)
 
-        if neurondict:
+        if isinstance(neurondict, dict) and isinstance(neuronlist, list):
             self.info = Informations.PopulationInfo(neurondict, neuronlist)
         else:
             self.info = Informations.PopulationInfo()
@@ -323,7 +411,7 @@ class Population(QGraphicsItem):
     def boundingRect(self):
         return QRectF(-self.pix.width() / 2, -self.pix.height() / 2, self.pix.width(), self.pix.height())
 
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget = None):
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
         QPainter.drawPixmap(-self.pix.width() / 2, -self.pix.height() / 2, self.pix)
         if self.isSelected():
             QPainter.drawRoundRect(self.boundingRect())

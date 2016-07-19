@@ -119,10 +119,15 @@
     </widget>
    </item>
    <item>
-    <widget class="QComboBox" name="comboBox_connectivity">
+    <widget class="QComboBox" name="comboBox_connector">
      <item>
       <property name="text">
        <string>New Connector</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>connect_one_to_one</string>
       </property>
      </item>
      <item>
@@ -157,22 +162,17 @@
      </item>
      <item>
       <property name="text">
+       <string>connect_gaussian</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
        <string>connect_from_matrix</string>
       </property>
      </item>
      <item>
       <property name="text">
        <string>connect_from_sparse</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>connect_gaussian</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>connect_one_to_one</string>
       </property>
      </item>
      <item>
