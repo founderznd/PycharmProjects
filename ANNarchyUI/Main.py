@@ -117,8 +117,9 @@ class MainWindow(QMainWindow):
             ids = QDataStream(self.file)
             self.saved_data = json.loads(ids.readString())
 
-            for item in self.scene.items():
-                self.scene.removeItem(item)
+            self.scene.clear()
+            # for item in self.scene.items():
+            #     self.scene.removeItem(item)
 
             self.scene.neuronlist = [QString(item) for item in self.saved_data.get("neuronlist")]
             self.scene.synapselist = [QString(item) for item in self.saved_data.get("synapselist")]

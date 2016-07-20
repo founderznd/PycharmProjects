@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>204</width>
+    <width>241</width>
     <height>450</height>
    </rect>
   </property>
@@ -137,11 +137,6 @@
      </item>
      <item>
       <property name="text">
-       <string>connect_dog</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
        <string>connect_fixed_number_post</string>
       </property>
      </item>
@@ -157,12 +152,17 @@
      </item>
      <item>
       <property name="text">
-       <string>connect_from_file</string>
+       <string>connect_dog</string>
       </property>
      </item>
      <item>
       <property name="text">
        <string>connect_gaussian</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>connect_from_file</string>
       </property>
      </item>
      <item>

@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(204, 450)
+        Form.resize(241, 450)
         self.verticalLayout = QtGui.QVBoxLayout(Form)
         self.verticalLayout.setContentsMargins(-1, 40, -1, -1)
         self.verticalLayout.setSpacing(15)
@@ -113,23 +113,13 @@ class Ui_Form(object):
         self.comboBox_connector.setItemText(0, _translate("Form", "New Connector", None))
         self.comboBox_connector.setItemText(1, _translate("Form", "connect_one_to_one", None))
         self.comboBox_connector.setItemText(2, _translate("Form", "connect_all_to_all", None))
-        self.comboBox_connector.setItemText(3, _translate("Form", "connect_dog", None))
-        self.comboBox_connector.setItemText(4, _translate("Form", "connect_fixed_number_post", None))
-        self.comboBox_connector.setItemText(5, _translate("Form", "connect_fixed_number_pre", None))
-        self.comboBox_connector.setItemText(6, _translate("Form", "connect_fixed_probability", None))
-        self.comboBox_connector.setItemText(7, _translate("Form", "connect_from_file", None))
-        self.comboBox_connector.setItemText(8, _translate("Form", "connect_gaussian", None))
+        self.comboBox_connector.setItemText(3, _translate("Form", "connect_fixed_number_post", None))
+        self.comboBox_connector.setItemText(4, _translate("Form", "connect_fixed_number_pre", None))
+        self.comboBox_connector.setItemText(5, _translate("Form", "connect_fixed_probability", None))
+        self.comboBox_connector.setItemText(6, _translate("Form", "connect_dog", None))
+        self.comboBox_connector.setItemText(7, _translate("Form", "connect_gaussian", None))
+        self.comboBox_connector.setItemText(8, _translate("Form", "connect_from_file", None))
         self.comboBox_connector.setItemText(9, _translate("Form", "connect_from_matrix", None))
         self.comboBox_connector.setItemText(10, _translate("Form", "connect_from_sparse", None))
         self.comboBox_connector.setItemText(11, _translate("Form", "connect_with_func", None))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    Form = QtGui.QWidget()
-    ui = Ui_Form()
-    ui.setupUi(Form)
-    Form.show()
-    sys.exit(app.exec_())
 

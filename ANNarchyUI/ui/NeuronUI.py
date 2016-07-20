@@ -51,7 +51,6 @@ class Ui_MainWindow(object):
         self.gview_network.setLineWidth(0)
         self.gview_network.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.gview_network.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.gview_network.setSceneRect(QtCore.QRectF(0.0, 0.0, 0.0, 0.0))
         self.gview_network.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         self.gview_network.setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
         self.gview_network.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
@@ -72,19 +71,19 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addLayout(self.gridLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menuBar = QtGui.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1000, 27))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1000, 22))
         self.menuBar.setObjectName(_fromUtf8("menuBar"))
         self.menuSave = QtGui.QMenu(self.menuBar)
         self.menuSave.setObjectName(_fromUtf8("menuSave"))
         MainWindow.setMenuBar(self.menuBar)
         self.actionOpen = QtGui.QAction(MainWindow)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("image/file_open.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("../image/file_open.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionOpen.setIcon(icon)
         self.actionOpen.setObjectName(_fromUtf8("actionOpen"))
         self.actionSave = QtGui.QAction(MainWindow)
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("image/file_save.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("../image/file_save.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionSave.setIcon(icon1)
         self.actionSave.setObjectName(_fromUtf8("actionSave"))
         self.actionSave_as = QtGui.QAction(MainWindow)
@@ -113,13 +112,3 @@ class Ui_MainWindow(object):
 
 from ConnectionView import NeuralConnectionView
 from PlotView import OutputGraphic
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    MainWindow = QtGui.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
-
