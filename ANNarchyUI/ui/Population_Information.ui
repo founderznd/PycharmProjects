@@ -35,6 +35,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>name:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLineEdit" name="name">
      <property name="text">
       <string/>
@@ -72,23 +79,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QComboBox" name="comboBox_neuron_type">
-     <item>
-      <property name="text">
-       <string>Define Own...</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>LeakyIntegratorNeuron</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Izhikevich</string>
-      </property>
-     </item>
-    </widget>
+    <widget class="QComboBox" name="comboBox_neuron_type"/>
    </item>
    <item>
     <spacer name="verticalSpacer">

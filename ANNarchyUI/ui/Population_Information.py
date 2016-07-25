@@ -38,6 +38,9 @@ class Ui_Form(object):
         self.label.setFont(font)
         self.label.setObjectName(_fromUtf8("label"))
         self.verticalLayout.addWidget(self.label)
+        self.label_4 = QtGui.QLabel(Form)
+        self.label_4.setObjectName(_fromUtf8("label_4"))
+        self.verticalLayout.addWidget(self.label_4)
         self.name = QtGui.QLineEdit(Form)
         self.name.setText(_fromUtf8(""))
         self.name.setAlignment(QtCore.Qt.AlignCenter)
@@ -56,9 +59,6 @@ class Ui_Form(object):
         self.verticalLayout.addWidget(self.label_3)
         self.comboBox_neuron_type = QtGui.QComboBox(Form)
         self.comboBox_neuron_type.setObjectName(_fromUtf8("comboBox_neuron_type"))
-        self.comboBox_neuron_type.addItem(_fromUtf8(""))
-        self.comboBox_neuron_type.addItem(_fromUtf8(""))
-        self.comboBox_neuron_type.addItem(_fromUtf8(""))
         self.verticalLayout.addWidget(self.comboBox_neuron_type)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem)
@@ -69,12 +69,10 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(_translate("Form", "Form", None))
         self.label.setText(_translate("Form", "Population", None))
+        self.label_4.setText(_translate("Form", "name:", None))
         self.label_2.setText(_translate("Form", "Geometry", None))
         self.geometry.setToolTip(_translate("Form", "<html><head/><body>please type paramters like (a1,a2,...,an)</span></pre></body></html>", None))
         self.label_3.setText(_translate("Form", "Neuron Type", None))
-        self.comboBox_neuron_type.setItemText(0, _translate("Form", "Define Own...", None))
-        self.comboBox_neuron_type.setItemText(1, _translate("Form", "LeakyIntegratorNeuron", None))
-        self.comboBox_neuron_type.setItemText(2, _translate("Form", "Izhikevich", None))
 
 
 if __name__ == "__main__":

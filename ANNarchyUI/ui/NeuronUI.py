@@ -46,13 +46,13 @@ class Ui_MainWindow(object):
         self.gridLayout_2 = QtGui.QGridLayout(self.tab_network)
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
         self.gview_network = NeuralConnectionView(self.tab_network)
+        self.gview_network.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.gview_network.setFrameShape(QtGui.QFrame.NoFrame)
         self.gview_network.setFrameShadow(QtGui.QFrame.Plain)
         self.gview_network.setLineWidth(0)
-        self.gview_network.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.gview_network.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.gview_network.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.gview_network.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.gview_network.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
-        self.gview_network.setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
         self.gview_network.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
         self.gview_network.setResizeAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
         self.gview_network.setViewportUpdateMode(QtGui.QGraphicsView.MinimalViewportUpdate)
@@ -71,7 +71,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addLayout(self.gridLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menuBar = QtGui.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1000, 22))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1000, 27))
         self.menuBar.setObjectName(_fromUtf8("menuBar"))
         self.menuSave = QtGui.QMenu(self.menuBar)
         self.menuSave.setObjectName(_fromUtf8("menuSave"))
@@ -86,11 +86,8 @@ class Ui_MainWindow(object):
         icon1.addPixmap(QtGui.QPixmap(_fromUtf8("../image/file_save.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionSave.setIcon(icon1)
         self.actionSave.setObjectName(_fromUtf8("actionSave"))
-        self.actionSave_as = QtGui.QAction(MainWindow)
-        self.actionSave_as.setObjectName(_fromUtf8("actionSave_as"))
         self.menuSave.addAction(self.actionOpen)
         self.menuSave.addAction(self.actionSave)
-        self.menuSave.addAction(self.actionSave_as)
         self.menuBar.addAction(self.menuSave.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -108,7 +105,16 @@ class Ui_MainWindow(object):
         self.actionOpen.setShortcut(_translate("MainWindow", "Ctrl+O", None))
         self.actionSave.setText(_translate("MainWindow", "Save", None))
         self.actionSave.setShortcut(_translate("MainWindow", "Ctrl+S", None))
-        self.actionSave_as.setText(_translate("MainWindow", "Save as...", None))
 
 from ConnectionView import NeuralConnectionView
 from PlotView import OutputGraphic
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    MainWindow = QtGui.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
+

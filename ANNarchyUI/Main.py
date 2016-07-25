@@ -41,7 +41,6 @@ class MainWindow(QMainWindow):
 
         self.ui.simulation_button.clicked.connect(self.slot_simulation)
         self.ui.gview_network.scene.sig_replot.connect(self.ui.tab_matplot.slot_DrawPlot)
-        self.ui.gview_network.population_button.clicked[bool].connect(self.ui.gview_network.scene.setPrepared)
         self.ui.actionSave.triggered.connect(self.slot_actionSave)
         self.ui.actionOpen.triggered.connect(self.slot_actionLoad)
 
@@ -86,7 +85,7 @@ class MainWindow(QMainWindow):
             if item.type == ItemType.POPULATION:
                 pops.append((item.x(), item.y(), item.info.currentData))
             if item.type == ItemType.PROJECTION:
-                line = item.line()
+                line = QLineF(item.sourcePoint, item.destPoint)
                 projs.append(
                         (line.x1(), line.y1(), line.x2(), line.y2(), item.info.currentData, item.info.currentConnector))
         self.saved_data.update({"Populations": pops})
@@ -108,7 +107,7 @@ class MainWindow(QMainWindow):
         :return:
         :rtype:
         """
-        self.filename = QFileDialog().getOpenFileName(self, "open file", QDir().currentPath()+"/save", "*.save;;*.*")
+        self.filename = QFileDialog().getOpenFileName(self, "open file", QDir().currentPath() + "/save", "*.save;;*.*")
         if not self.filename:
             return
         self.file.setFileName(self.filename)
