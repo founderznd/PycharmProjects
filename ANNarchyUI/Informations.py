@@ -6,7 +6,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 from ui import Population_Information, Neuron_Definition, Projection_Information, Synapse_Definition, \
-    Connector_Definition
+    Connector_Definition, MonitorUI
 
 
 # this class is used to store all Informations of Population
@@ -34,8 +34,8 @@ class PopulationInfo(QWidget):
 
         # dialog for neuron definition
         self.dialog = QDialog()
-        self.dui = Neuron_Definition.Ui_Dialog()
-        self.dui.setupUi(self.dialog)
+        self.nui = Neuron_Definition.Ui_Dialog()
+        self.nui.setupUi(self.dialog)
 
         self.currentNeuron = {
             "name"       : "",
@@ -56,11 +56,89 @@ class PopulationInfo(QWidget):
         self.ui.comboBox_neuron_type.setCurrentIndex(
                 self.ui.comboBox_neuron_type.findText(self.currentData.get("neuron")))
 
+        self.currentMonitor = {
+            "enabled"  : False,
+            "obj"      : "",
+            "variables": "",
+            "period"   : 10.0,
+            "start"    : False
+        }
+        self.setCurrentMonitor()
+
+        self.dialog2 = QDialog()
+        self.mui = MonitorUI.Ui_Dialog()
+        self.mui.setupUi(self.dialog2)
+
+        """signal and slot"""
+        """ui"""
         self.connect(self.ui.comboBox_neuron_type, SIGNAL("activated(QString)"), self.openNeuronDefinition)
         self.connect(self.ui.name, SIGNAL("editingFinished()"), self.slot_updateName)
         self.connect(self.ui.geometry, SIGNAL("editingFinished()"), self.slot_updateGeometry)
-        self.connect(self.dui.buttonBox, SIGNAL("accepted()"), self.slot_updateNeuron)
-        self.connect(self.dui.buttonBox, SIGNAL("rejected()"), self.slot_rollback)
+        """neuron"""
+        self.connect(self.nui.buttonBox, SIGNAL("accepted()"), self.slot_updateNeuron)
+        self.connect(self.nui.buttonBox, SIGNAL("rejected()"), self.slot_rollback)
+        """monitor"""
+        self.ui.groupBox_monitor.toggled.connect(self.slot_updateEnable)
+        self.ui.name.textChanged.connect(self.slot_updateObj)
+        self.ui.checkBox_start.toggled.connect(self.slot_updateStart)
+        self.ui.doubleSpinBox_period.valueChanged.connect(self.slot_updatePeriod)
+        self.ui.lineEdit_variables.textChanged.connect(self.slot_updateVariables)
+
+    def slot_monitor(self):
+        if self.currentMonitor.get("enabled") is True:
+            self.mui.widget_matplot.slot_draw_plot(self.currentMonitor)
+            self.dialog2.show()
+        else:
+            """
+            QMessageBox.information(
+                QWidget,
+                QString,
+                QString,
+                QMessageBox.StandardButtons buttons=QMessageBox.Ok,
+                QMessageBox.StandardButton defaultButton=QMessageBox.NoButton
+            ) -> QMessageBox.StandardButton
+            """
+            QMessageBox().information(
+                    self,
+                    "Information",
+                    "Monitor is disabled",
+                    QMessageBox.Ok,
+                    QMessageBox.Ok
+            )
+
+    def slot_updateEnable(self, isChecked):
+        self.currentMonitor.update({
+            "enabled": isChecked
+        })
+
+    def slot_updateObj(self, s=""):
+        self.currentMonitor.update({
+            "obj": str(s)
+        })
+        self.dialog2.setWindowTitle("Monitor:[ " + s + " ]")
+
+    def slot_updateVariables(self, s=""):
+        self.currentMonitor.update({
+            "variables": str(s)
+        })
+
+    def slot_updatePeriod(self, n=0.0):
+        self.currentMonitor.update({
+            "period": n
+        })
+
+    def slot_updateStart(self, isChecked):
+        self.currentMonitor.update({
+            "start": isChecked
+        })
+
+    def setCurrentMonitor(self, currentMonitor=None):
+        if isinstance(currentMonitor, dict):
+            self.currentMonitor.update(currentMonitor)
+        self.ui.groupBox_monitor.setChecked(self.currentMonitor.get("enabled"))
+        self.ui.lineEdit_variables.setText(self.currentMonitor.get("variables"))
+        self.ui.checkBox_start.setChecked(self.currentMonitor.get("start"))
+        self.ui.doubleSpinBox_period.setValue(self.currentMonitor.get("period"))
 
     # synchronize currentData
     def setCurrentData(self, currentData=None):
@@ -113,18 +191,18 @@ class PopulationInfo(QWidget):
         self.ui.geometry.blockSignals(False)
 
     def slot_updateNeuron(self):
-        neuron_name = self.dui.neurontype.text()
+        neuron_name = self.nui.neurontype.text()
         if not neuron_name.isEmpty():
             self.currentData.update({"neuron": str(neuron_name)})
             temp = {}
-            temp.update({"name": str(self.dui.neurontype.text())})
-            temp.update({"parameters": str(self.dui.parameter.toPlainText())})
-            temp.update({"equations": str(self.dui.equation.toPlainText())})
-            temp.update({"spike": str(self.dui.spike.toPlainText())})
-            temp.update({"reset": str(self.dui.reset.toPlainText())})
-            temp.update({"functions": str(self.dui.plainTextEdit_function.toPlainText())})
-            temp.update({"description": str(self.dui.plainTextEdit_description.toPlainText())})
-            temp.update({"refractory": self.dui.doubleSpinBox_refractory.value()})
+            temp.update({"name": str(self.nui.neurontype.text())})
+            temp.update({"parameters": str(self.nui.parameter.toPlainText())})
+            temp.update({"equations": str(self.nui.equation.toPlainText())})
+            temp.update({"spike": str(self.nui.spike.toPlainText())})
+            temp.update({"reset": str(self.nui.reset.toPlainText())})
+            temp.update({"functions": str(self.nui.plainTextEdit_function.toPlainText())})
+            temp.update({"description": str(self.nui.plainTextEdit_description.toPlainText())})
+            temp.update({"refractory": self.nui.doubleSpinBox_refractory.value()})
             self.currentNeuron = temp
             self.neurondict.update({str(neuron_name): self.currentNeuron})
             # update neuronlist
@@ -144,7 +222,7 @@ class PopulationInfo(QWidget):
         self.dialog.reject()
 
     def openNeuronDefinition(self, s):
-        self.dui.tabWidget.setCurrentIndex(0)
+        self.nui.tabWidget.setCurrentIndex(0)
         # self.preData.update(self.currentData)
         neuron = self.neurondict.get(str(s))
         if neuron:
@@ -156,31 +234,31 @@ class PopulationInfo(QWidget):
             refractory = neuron.get("refractory")
             functions = neuron.get("functions")
             description = neuron.get("description")
-            self.dui.neurontype.setText(name if name else "")
-            self.dui.parameter.setPlainText(parameters if parameters else "")
-            self.dui.equation.setPlainText(equations if equations else "")
-            self.dui.spike.setPlainText(spike if spike else "")
-            self.dui.reset.setPlainText(reset if reset else "")
-            self.dui.doubleSpinBox_refractory.setValue(refractory if refractory else 0)
-            self.dui.plainTextEdit_function.setPlainText(functions if functions else "")
-            self.dui.plainTextEdit_description.setPlainText(description if description else "")
-            self.dui.neurontype.setReadOnly(True)
+            self.nui.neurontype.setText(name if name else "")
+            self.nui.parameter.setPlainText(parameters if parameters else "")
+            self.nui.equation.setPlainText(equations if equations else "")
+            self.nui.spike.setPlainText(spike if spike else "")
+            self.nui.reset.setPlainText(reset if reset else "")
+            self.nui.doubleSpinBox_refractory.setValue(refractory if refractory else 0)
+            self.nui.plainTextEdit_function.setPlainText(functions if functions else "")
+            self.nui.plainTextEdit_description.setPlainText(description if description else "")
+            self.nui.neurontype.setReadOnly(True)
         else:
-            self.dui.neurontype.clear()
-            self.dui.parameter.clear()
-            self.dui.equation.clear()
-            self.dui.spike.clear()
-            self.dui.reset.clear()
-            self.dui.doubleSpinBox_refractory.clear()
-            self.dui.plainTextEdit_function.clear()
-            self.dui.plainTextEdit_description.clear()
-            self.dui.neurontype.setReadOnly(False)
+            self.nui.neurontype.clear()
+            self.nui.parameter.clear()
+            self.nui.equation.clear()
+            self.nui.spike.clear()
+            self.nui.reset.clear()
+            self.nui.doubleSpinBox_refractory.clear()
+            self.nui.plainTextEdit_function.clear()
+            self.nui.plainTextEdit_description.clear()
+            self.nui.neurontype.setReadOnly(False)
 
         # here changes the layout of each neuron type
         if s == "LeakyIntegratorNeuron":
-            self.dui.tabWidget.setTabEnabled(2, False)
+            self.nui.tabWidget.setTabEnabled(2, False)
         else:
-            self.dui.tabWidget.setTabEnabled(2, True)
+            self.nui.tabWidget.setTabEnabled(2, True)
 
         self.dialog.show()
 
@@ -200,7 +278,7 @@ class ProjectionInfo(QWidget):
             "pre"      : str(source.info.currentData.get("name")) if source else "",
             "post"     : str(dest.info.currentData.get("name")) if dest else "",
             "target"   : "",
-            "synapse"  : "Oja",
+            "synapse"  : "None",
             "connector": "connect_one_to_one"
         }
 

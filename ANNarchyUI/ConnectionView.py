@@ -13,13 +13,6 @@ class ItemType(object):
     POPULATION = 1
 
 
-# enum of projection type
-class ProjectionWay(object):
-    NORMAL = 0
-    OTHER = 1
-    SELF = 2
-
-
 class PopulationButton(QToolButton):
     SIZE = 50
 
@@ -90,7 +83,7 @@ class NeuralConnectionView(QGraphicsView):
 
         if e.key() == Qt.Key_Escape:
             self.population_button.setChecked(False)
-            self.scene.isPrepared = False
+            self.scene.setPrepared(False)
             self.dragdrop_button.setChecked(False)
             self.slot_swith_dragMode()
         self.scene.update()
@@ -103,13 +96,14 @@ class MyScene(QGraphicsScene):
         super(MyScene, self).__init__()
         self.setItemIndexMethod(QGraphicsScene.BspTreeIndex)
         self.setSceneRect(0, 0, 1920, 1080)
-        self.pw = ProjectionWay.NORMAL
-        self.item_data = dict()
+        self.isReadyToProjection = False
         self.pop_menu = QMenu()
-        self.pop_menu.addAction(QIcon("image/proj_to_other.png"), "project to other", self.slot_proj_other)
-        self.pop_menu.addAction(QIcon("image/setup.png"), "setting neuron", self.slot_setting)
-        # self.pop_menu.addAction(QIcon("image/proj_to_self.png"), "project to self", self.slot_proj_self)
+        self.pop_menu.addAction(QIcon("image/proj_to_other.png"), "project to other", self.slot_projection)
+        self.pop_menu.addAction(QIcon("image/setup.png"), "setting neuron", self.slot_set_neuron)
+        self.pop_menu.addAction(QIcon("image/monitor.png"), "Monitor", self.slot_monitor)
         self.proj_menu = QMenu()
+        self.proj_menu.addAction(QIcon("image/setup.png"), "setting synapse", self.slot_set_synapse)
+        self.proj_menu.addAction(QIcon("image/setup.png"), "setting connector", self.slot_set_connector)
 
         self.neuronlist = [
             QString("Define Own..."),
@@ -174,20 +168,18 @@ class MyScene(QGraphicsScene):
         self.synapsedict = dict()
         self.synapselist = [
             QString("Define Own..."),
+            QString("None"),
             QString("Oja"),
             QString("Spiking synapse")
         ]
         self.synapsedict.update({
-            "Oja": {
-                "parameters" : "tau = 5000\n"
-                               "alpha = 8.0",
-                "equations"  : "tau * dw / dt = pre.r * post.r - alpha * post.r^2 * w",
-                "psp"        : "",
-                "pre_spike"  : "",
-                "post_spike" : "",
-                "functions"  : "product(x,y) = x * y",
-                "name"       : "Oja",
-                "description": ""
+            "None": {},
+            "Oja" : {
+                "parameters": "tau = 5000\n"
+                              "alpha = 8.0",
+                "equations" : "tau * dw / dt = pre.r * post.r - alpha * post.r^2 * w",
+                "functions" : "product(x,y) = x * y",
+                "name"      : "Oja",
             }
         })
         self.synapsedict.update({
@@ -209,38 +201,46 @@ class MyScene(QGraphicsScene):
         self.isPrepared = False
         self.info_stack = QStackedWidget()
 
-    def setCursor(self, cursor=None):
-        """
-        cursor is in enum Qt::CursorShape
-        which has the a int value in [0,24]
-        :param cursor:
-        :type cursor:
-        :return:
-        :rtype:
-        """
-        view = self.views()[0]
-        if isinstance(view, QGraphicsView):
-            if cursor in range(0, 24):
-                view.setCursor(cursor)
-            else:
-                view.setCursor(Qt.ArrowCursor)
+    def setCursor(self, cursor=(int, QCursor)):
+        for view in self.views():
+            view.setCursor(cursor)
 
-    def slot_proj_other(self):
+    def slot_projection(self):
         """
         draw Projection from a pop to another
         :return:
         :rtype:
         """
-        self.source = self.currentItem
-        self.pw = ProjectionWay.OTHER
+        self.isReadyToProjection = True
         self.setCursor(Qt.PointingHandCursor)
+        self.source = self.currentItem
 
-    def slot_setting(self):
-        if self.currentItem and self.currentItem.type == ItemType.POPULATION:
-            currentNeuron = self.currentItem.info.currentData.get("neuron")
-            self.currentItem.info.openNeuronDefinition(currentNeuron)
+    def slot_monitor(self):
+        if isinstance(self.currentItem, Population):
+            self.currentItem.info.slot_monitor()
+
+    def slot_set_neuron(self):
+        if isinstance(self.currentItem, Population):
+            self.currentItem.info.openNeuronDefinition(self.currentItem.info.currentData.get("neuron"))
+
+    def slot_set_synapse(self):
+        if isinstance(self.currentItem, Projection):
+            self.currentItem.info.openSynapseDefinition(self.currentItem.info.currentData.get("synapse"))
+
+    def slot_set_connector(self):
+        if isinstance(self.currentItem, Projection):
+            self.currentItem.info.openConnectorDefinition(self.currentItem.info.currentData.get("connector"))
 
     def setPrepared(self, isPrepared):
+        if isPrepared:
+            pix = QPixmap("image/neuron.png")
+            pix = pix.scaled(Population.SIZE, Population.SIZE)
+            cursor = QCursor(pix)
+            self.setCursor(cursor)
+        else:
+            self.setCursor(Qt.ArrowCursor)
+            for view in self.views():
+                view.population_button.setChecked(False)
         self.isPrepared = isPrepared
 
     def update(self, *__args):
@@ -295,7 +295,7 @@ class MyScene(QGraphicsScene):
 
     def removeProjectionsOf(self, item):
         for proj in self.items():
-            if proj.type == ItemType.PROJECTION and proj.contains(item.pos()):
+            if isinstance(proj, Projection) and proj.contains(item.pos()):
                 self.info_stack.removeWidget(proj.info)
                 self.removeItem(proj)
                 self.update()
@@ -304,55 +304,49 @@ class MyScene(QGraphicsScene):
         super(MyScene, self).mouseMoveEvent(e)
         if e.buttons() == Qt.LeftButton:
             for proj in self.items():
-                if proj.type == ItemType.PROJECTION:
+                if isinstance(proj, Projection):
                     proj.update()
-        self.update()
+                    self.update()
+
+    # def mouseReleaseEvent(self, e):
+    #     super(MyScene, self).mouseReleaseEvent(e)
+    #     if e.button() == Qt.LeftButton and self.isReadyToProjection is True:
+    #         print "begin"
+    #         self.tmp = QLineF(self.source.scenePos(), e.scenePos())
+    #         self.addLine(self.tmp)
 
     def mousePressEvent(self, e):
         super(MyScene, self).mousePressEvent(e)
         self.currentItem = self.itemAt(e.scenePos())
+        if self.currentItem and len(self.selectedItems()) == 0:
+            self.currentItem.setSelected(True)
 
-        if self.currentItem and self.currentItem.type == ItemType.POPULATION:
-            # show info of currentItem
-            index = self.info_stack.indexOf(self.currentItem.info)
-            self.info_stack.setCurrentIndex(index)
-            if e.button() == Qt.LeftButton:
-                if self.pw == ProjectionWay.OTHER and self.source:
-                    self.dest = self.currentItem
-                    self.addProjection(self.source, self.dest)
-                    self.setCursor(Qt.ArrowCursor)
-                if self.pw == ProjectionWay.NORMAL:
-                    self.item_data = self.currentItem.info.currentData
-                    self.sig_replot.emit()
-            if e.button() == Qt.RightButton:
-                self.pop_menu.exec_(e.screenPos())
-
-        if self.currentItem and self.currentItem.type == ItemType.PROJECTION:
-            # show info of currentItem
-            index = self.info_stack.indexOf(self.currentItem.info)
-            self.info_stack.setCurrentIndex(index)
-            if e.button() == Qt.LeftButton:
-                self.item_data = self.currentItem.info.currentData
-
-        if self.currentItem is None:
-            if self.pw != ProjectionWay.NORMAL:
-                self.setCursor(Qt.ArrowCursor)
-                self.pw = ProjectionWay.NORMAL
-            if e.button() == Qt.LeftButton and self.isPrepared:
+        if e.button() == Qt.LeftButton:
+            """add a new Population"""
+            if self.currentItem is None and self.isPrepared:
+                # self.setCursor(Qt.ArrowCursor)
+                self.isReadyToProjection = False
                 self.addPopulation(e.scenePos())
+            """show info of Item"""
+            if self.currentItem:
+                index = self.info_stack.indexOf(self.currentItem.info)
+                self.info_stack.setCurrentIndex(index)
+            """add a new Projection"""
+            if self.isReadyToProjection is True and isinstance(self.currentItem, Population):
+                self.dest = self.currentItem
+                self.addProjection(self.source, self.dest)
+                self.setCursor(Qt.ArrowCursor)
+                self.isReadyToProjection = False
+
+        if e.button() == Qt.RightButton:
+            if self.currentItem is None:
+                self.setPrepared(False)
+            if isinstance(self.currentItem, Population):
+                self.pop_menu.exec_(e.screenPos())
+            if isinstance(self.currentItem, Projection):
+                self.proj_menu.exec_(e.screenPos())
 
         self.update()
-
-    # def mouseReleaseEvent(self, e):
-    #     super(MyScene, self).mouseReleaseEvent(e)
-    #     if e.button() == Qt.RightButton and self.source:
-    #         self.dest = self.itemAt(e.scenePos())
-    #         if self.dest and self.dest.type == ItemType.POPULATION:
-    #             self.addProjection(self.source, self.dest)
-    #             view = self.views()[0]
-    #             if isinstance(view, QGraphicsView):
-    #                 view.setCursor(Qt.ArrowCursor)
-    #             self.update()
 
     def mouseDoubleClickEvent(self, e):
         if self.currentItem and e.button() == Qt.LeftButton:
@@ -364,8 +358,8 @@ class MyScene(QGraphicsScene):
 
 class Projection(QGraphicsPathItem):
     OffSet = 40
-    ArrowSize = 13
-    LineWidth = 3
+    ArrowSize = 14
+    LineWidth = 6
 
     def __init__(self, sourceNode, destNode, synapsedict=None, synapselist=None, connectorlist=None):
         super(Projection, self).__init__()
@@ -381,7 +375,6 @@ class Projection(QGraphicsPathItem):
 
         self.setPath(self.currentPath())
 
-        # if type(synapsedict) == dict or type(synapselist) == list or type(connectorlist):
         if type(synapsedict) == dict and type(synapselist) == list:
             self.info = Informations.ProjectionInfo(self.source, self.dest, synapsedict, synapselist, connectorlist)
         else:
@@ -399,7 +392,7 @@ class Projection(QGraphicsPathItem):
         else:
             return super(Projection, self).contains(p)
 
-    def currentPath(self):
+    def currentPath(self, color=None):
         qpath = QPainterPath()
         pen = QPen()
         pen.setWidth(Projection.LineWidth)
@@ -408,12 +401,12 @@ class Projection(QGraphicsPathItem):
         brush = QBrush()
         brush.setStyle(Qt.SolidPattern)
 
-        if self.isSelected():
-            pen.setColor(Qt.red)
-            brush.setColor(Qt.red)
+        if isinstance(color, QColor):
+            pen.setColor(color)
+            brush.setColor(color)
 
         self.setPen(pen)
-        self.setBrush(brush)
+        # self.setBrush(brush)
 
         if self.sourcePoint != self.destPoint:
 
@@ -435,6 +428,7 @@ class Projection(QGraphicsPathItem):
             v2.setLength(v1.length() * 0.4)
             v3 = v2.normalVector().normalVector()
 
+            p0 = v1.p1()
             p1 = v1.p2()
             p2 = v2.p2()
             p3 = v3.p2()
@@ -444,26 +438,31 @@ class Projection(QGraphicsPathItem):
             if dist.length() > Population.SIZE * math.sqrt(2) + Projection.ArrowSize:
                 qpath.moveTo(self.beginPoint)
                 qpath.lineTo(self.endPoint)
-                qpath.addPolygon(QPolygonF([p1, p2, p3, p1]))
+                qpath.addPolygon(QPolygonF([p0, p2, p1, p3, p0]))
                 v3.setLength(20)
                 qpath.translate(v3.p2() - v3.p1())
         else:
-            rect = QRectF(0, 0, math.sqrt(2) * Population.SIZE + 3, math.sqrt(2) * Population.SIZE + 3)
+            rect = QRectF(0, 0, math.sqrt(2) * Population.SIZE, math.sqrt(2) * Population.SIZE)
             rect.moveCenter(self.sourcePoint)
-            qpath.addEllipse(rect)
             # begin draw arrow
             v1 = QLineF(rect.topLeft(), rect.topRight()).unitVector()
             v1.setLength(self.ArrowSize)
-            v1.translate(QPointF(self.sourcePoint.x() - 5, rect.top()) - rect.topLeft())
+            v1.translate(QPointF(self.sourcePoint.x(), rect.top()) - rect.topLeft())
             v2 = v1.normalVector()
             v2.setLength(v1.length() * 0.4)
             v3 = v2.normalVector().normalVector()
 
+            p0 = v1.p1()
             p1 = v1.p2()
             p2 = v2.p2()
             p3 = v3.p2()
-            self.setBrush(QBrush())
-            qpath.addPolygon(QPolygonF([p1, p2, p3, p1]))
+            qpath.addPolygon(QPolygonF([p0, p2, p1, p3, p0]))
+            # qpath.addEllipse(rect)
+            qpath.moveTo(p0)
+            qpath.arcTo(rect, 90, 270)
+            # c1 = rect.bottomLeft()
+            # c2 = self.sourcePoint
+            # qpath.cubicTo(c1, c2, p1)
 
         return qpath
 
@@ -479,7 +478,10 @@ class Projection(QGraphicsPathItem):
 
     def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
         super(Projection, self).paint(QPainter, QStyleOptionGraphicsItem, None)
-        self.setPath(self.currentPath())
+        if self.isSelected():
+            self.setPath(self.currentPath(QColor(Qt.red)))
+        else:
+            self.setPath(self.currentPath(QColor(Qt.black)))
 
 
 class Population(QGraphicsItem):
@@ -500,9 +502,10 @@ class Population(QGraphicsItem):
             self.info = Informations.PopulationInfo()
 
     def boundingRect(self):
-        return QRectF(-self.pix.width() / 2, -self.pix.height() / 2, self.pix.width(), self.pix.height())
+        return QRectF(-self.pix.width() / 2, -self.pix.height() / 2, self.pix.width(), self.pix.height() * 1.2)
 
     def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
         QPainter.drawPixmap(-self.pix.width() / 2, -self.pix.height() / 2, self.pix)
+        QPainter.drawText(self.boundingRect(), Qt.AlignBottom | Qt.AlignHCenter, self.info.currentData.get("name"))
         if self.isSelected():
             QPainter.drawRoundRect(self.boundingRect())

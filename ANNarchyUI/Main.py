@@ -7,7 +7,7 @@ import json
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-from ConnectionView import ItemType
+import ConnectionView
 from ui import NeuronUI
 
 
@@ -31,28 +31,79 @@ class MainWindow(QMainWindow):
 
         self.scene = self.ui.gview_network.scene
         self.info_stack = self.scene.info_stack
-        vbox = QVBoxLayout()
-        self.ui.information.setLayout(vbox)
-        vbox.addWidget(self.info_stack)
+        self.ui.vbox_information.addWidget(self.info_stack)
 
         """connect tab1 to tab2, in order to get the data from items of tab1"""
-        # it better to use signal
-        self.ui.tab_matplot.connectTo(self.ui.gview_network)
+        # it is better to use signal
+        # self.ui.connectTo(self.ui.gview_network)
+        # self.ui.gview_network.scene.sig_replot.connect(self.ui..slot_DrawPlot)
 
         self.ui.simulation_button.clicked.connect(self.slot_simulation)
-        self.ui.gview_network.scene.sig_replot.connect(self.ui.tab_matplot.slot_DrawPlot)
-        self.ui.actionSave.triggered.connect(self.slot_actionSave)
+        self.ui.actionNew.triggered.connect(self.slot_actionNew)
         self.ui.actionOpen.triggered.connect(self.slot_actionLoad)
+        self.ui.actionSave.triggered.connect(self.slot_actionSave)
+        self.ui.actionSave_as.triggered.connect(self.slot_actionSave_as)
+
+    def slot_actionNew(self):
+        """
+        create a new network
+        :return:
+        :rtype:
+        """
+        """
+        QMessageBox.question(
+            QWidget,
+            QString,
+            QString,
+            QMessageBox.StandardButtons buttons=QMessageBox.Ok,
+            QMessageBox.StandardButton defaultButton=QMessageBox.NoButton
+        ) -> QMessageBox.StandardButton
+        """
+        button = QMessageBox().question(
+                self,
+                "Warning!",
+                "Do you want to save this file before create a new one?",
+                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+                QMessageBox.Yes
+        )
+        if button == QMessageBox.Cancel:
+            return
+        if button == QMessageBox.Yes:
+            self.slot_actionSave_as()
+        self.filename = ""
+        self.scene.clear()
 
     def slot_actionSave(self):
-        QDir().mkdir("save")
-        self.filename = QFileDialog().getSaveFileName(self, "save file", QDir().currentPath() + "/save", "*.save;;*.*")
-        if not self.filename:
-            return
-        if not self.filename.endsWith(".save"):
-            self.file.setFileName(self.filename.append(".save"))
-        else:
-            self.file.setFileName(self.filename)
+        """
+        save data
+        :return:
+        :rtype:
+        """
+        if self.filename == "":
+            QDir().mkdir("save")
+            """
+            QFileDialog.getSaveFileName(
+                QWidget parent=None,
+                QString caption=QString(),
+                QString directory=QString(),
+                QString filter=QString(),
+                QString selectedFilter=None,
+                QFileDialog.Options options=0
+            ) -> QString
+            """
+            self.filename = QFileDialog().getSaveFileName(
+                    self,
+                    "save file",
+                    QDir().currentPath() + "/save",
+                    "*.save;;*.*"
+            )
+            if not self.filename:
+                return
+            if not self.filename.endsWith(".save"):
+                self.file.setFileName(self.filename.append(".save"))
+            else:
+                self.file.setFileName(self.filename)
+
         if self.file.open(QIODevice.WriteOnly | QIODevice.Truncate):
             ods = QDataStream(self.file)
             js = self.create_JSON_Object()
@@ -60,12 +111,16 @@ class MainWindow(QMainWindow):
             print  self.filename + " has been saved"
         self.file.close()
 
+    def slot_actionSave_as(self):
+        self.filename = ""
+        self.slot_actionSave()
+
     def create_JSON_Object(self, data=None):
         """
         encode data to a json string and return it
 
         data = {
-            "Populations": [(pos.x(),pos.y(),currentData = dict),...],
+            "Populations": [(pos.x(),pos.y(),currentData = dict,currentMonitor = dict),...],
             "Projections": [(source.x(),source.y(),dest.x(),dest.y(),currentData = dict,currentConnector = dict),...],
             "neuronlist" : [self.scene.neuronlist],
             "synapselist": [self.scene.synapselist],
@@ -82,12 +137,16 @@ class MainWindow(QMainWindow):
         pops = list()
         projs = list()
         for item in self.scene.items():
-            if item.type == ItemType.POPULATION:
-                pops.append((item.x(), item.y(), item.info.currentData))
-            if item.type == ItemType.PROJECTION:
-                line = QLineF(item.sourcePoint, item.destPoint)
+            if item.type == ConnectionView.ItemType.POPULATION:
+                pops.append((item.x(), item.y(), item.info.currentData, item.info.currentMonitor))
+            if item.type == ConnectionView.ItemType.PROJECTION:
                 projs.append(
-                        (line.x1(), line.y1(), line.x2(), line.y2(), item.info.currentData, item.info.currentConnector))
+                        (
+                            item.sourcePoint.x(), item.sourcePoint.y(),
+                            item.destPoint.x(), item.destPoint.y(),
+                            item.info.currentData, item.info.currentConnector
+                        )
+                )
         self.saved_data.update({"Populations": pops})
         self.saved_data.update({"Projections": projs})
 
@@ -107,53 +166,76 @@ class MainWindow(QMainWindow):
         :return:
         :rtype:
         """
+        """
+        QFileDialog.getOpenFileName(
+            QWidget parent=None,
+            QString caption=QString(),
+            QString directory=QString(),
+            QString filter=QString(),
+            QString selectedFilter=None,
+            QFileDialog.Options options=0
+        ) -> QString
+        """
         self.filename = QFileDialog().getOpenFileName(self, "open file", QDir().currentPath() + "/save", "*.save;;*.*")
         if not self.filename:
+            print "file is not opened"
             return
         self.file.setFileName(self.filename)
         if self.file.open(QIODevice.ReadOnly):
             print  self.file.fileName() + " has been opened"
-            ids = QDataStream(self.file)
-            self.saved_data = json.loads(ids.readString())
+
+            try:
+                ids = QDataStream(self.file)
+                self.saved_data = json.loads(ids.readString())
+            except IOError:
+                print IOError.message
 
             self.scene.clear()
-            # for item in self.scene.items():
-            #     self.scene.removeItem(item)
 
             self.scene.neuronlist = [QString(item) for item in self.saved_data.get("neuronlist")]
             self.scene.synapselist = [QString(item) for item in self.saved_data.get("synapselist")]
             self.scene.neurondict.update(self.saved_data.get("neurondict"))
             self.scene.synapsedict.update(self.saved_data.get("synapsedict"))
 
-            pops = self.saved_data.get("Populations")
-            for item in pops:
-                """
-                item[0]:item.x()::float
-                item[1]:item.y()::float
-                item[2]:item.info.currentData::dict
-                """
-                info = self.scene.addPopulation(QPointF(item[0], item[1]))
-                info.setCurrentData(item[2])
-            projs = self.saved_data.get("Projections")
-            for item in projs:
-                """
-                item[0]:source.x()
-                item[1]:source.y()
-                item[2]:dest.x()
-                item[3]:dest.x()
-                item[4]:item.info.currentData::dict
-                item[5]:item.info.currentConnector::dict
-                """
-                source = self.scene.itemAt(QPointF(item[0], item[1]))
-                dest = self.scene.itemAt(QPointF(item[2], item[3]))
-                info = self.scene.addProjection(source, dest)
-                info.setCurrentData(item[4])
-                info.setCurrentConnector(item[5])
-        self.file.close()
+            try:
+                pops = self.saved_data.get("Populations")
+                for item in pops:
+                    """
+                    float   item[0]:item.x()
+                    float   item[1]:item.y()
+                    dict    item[2]:item.info.currentData
+                    dict    item[3]:item.info.currentMonitor
+                    """
+                    info = self.scene.addPopulation(QPointF(item[0], item[1]))
+                    info.setCurrentData(item[2])
+                    info.setCurrentMonitor(item[3])
+            except IndexError:
+                print IndexError, " in Populations"
+
+            try:
+                projs = self.saved_data.get("Projections")
+                for item in projs:
+                    """
+                    float   item[0]:source.x()
+                    float   item[1]:source.y()
+                    float   item[2]:dest.x()
+                    float   item[3]:dest.y()
+                    dict    item[4]:item.info.currentData
+                    dict    item[5]:item.info.currentConnector
+                    """
+                    source = self.scene.itemAt(QPointF(item[0], item[1]))
+                    dest = self.scene.itemAt(QPointF(item[2], item[3]))
+                    info = self.scene.addProjection(source, dest)
+                    info.setCurrentData(item[4])
+                    info.setCurrentConnector(item[5])
+            except IndexError:
+                print IndexError, " in Projections"
+
+            self.file.close()
 
     # todo finish simulation
     def slot_simulation(self):
-        self.ui.gview_network.scene.update()
+        self.scene.update()
         """simulation 1"""
         # self.ui.tab_matplot.slot_DrawPlot()
 
@@ -291,6 +373,9 @@ class MainWindow(QMainWindow):
         # print self.ui.gview_network.scene.neuronlist
         # print self.ui.gview_network.scene.synapselist
         # print self.ui.gview_network.scene.neuronsdict
+        for pop in self.scene.items():
+            if isinstance(pop, ConnectionView.Population):
+                pop.info.mui.widget_matplot.slot_draw_plot(pop.info.currentMonitor)
 
 
 if __name__ == '__main__':

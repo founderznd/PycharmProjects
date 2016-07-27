@@ -6,39 +6,34 @@ from PyQt4.QtGui import *
 
 
 class OutputGraphic(QWidget):
-    def __init__(self):
-        super(OutputGraphic, self).__init__()
+    def __init__(self, *args):
+        super(OutputGraphic, self).__init__(*args)
         vbox = QVBoxLayout(self)
         self.fig = plt.figure()
         self.fig.set_tight_layout(True)
-        self.view = None
+        self.monitor = dict()
 
-        self.plt1 = self.fig.add_subplot(311)
-        self.plt2 = self.fig.add_subplot(312)
-        self.plt3 = self.fig.add_subplot(313)
-        # self.plt = self.fig.add_subplot(111)
+        # self.plt1 = self.fig.add_subplot(311)
+        # self.plt2 = self.fig.add_subplot(312)
+        # self.plt3 = self.fig.add_subplot(313)
+        self.plt = self.fig.add_subplot(111)
 
         self.canvas = FigureCanvasQTAgg(self.fig)
         toolbar = NavigationToolbar2QT(self.canvas, self)
         vbox.addWidget(self.canvas)
         vbox.addWidget(toolbar)
 
-    # connect to another view, in order to get the data from items of another tab
-    def connectTo(self, view):
-        self.view = view
-
-    def slot_DrawPlot(self):
-        # data is a dictionary
-        data = self.view.scene.item_data
-
-        self.plt1.cla()
-        self.plt2.cla()
-        self.plt3.cla()
-
-        self.plt1.text(0.2, 0.2, "DSFAasdf")
-
-        self.plt2.text(0.2, 0.2, data.get("geometry"))
-
-        self.plt3.text(0.2, 0.2, data.get("parameter"))
-
+    def slot_draw_plot(self, monitor=dict):
+        self.monitor.update(monitor)
+        if self.monitor.get("enabled") is not True:
+            self.monitor.clear()
+            self.parentWidget().parentWidget().close()
+        """
+             self.plt1.cla()
+             self.plt2.cla()
+             self.plt3.cla()
+        """
+        self.plt.cla()
+        # self.plt.text(str(self.monitor))
+        self.plt.text(0, 0.5, str(self.monitor))
         self.canvas.draw()
