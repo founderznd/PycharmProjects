@@ -7,13 +7,27 @@
     <x>0</x>
     <y>0</y>
     <width>391</width>
-    <height>364</height>
+    <height>399</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Synapse</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>Synapse Type:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comboBox_synapse_type"/>
+     </item>
+    </layout>
+   </item>
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">

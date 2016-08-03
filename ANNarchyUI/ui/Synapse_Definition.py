@@ -25,9 +25,18 @@ except AttributeError:
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
-        Dialog.resize(391, 364)
+        Dialog.resize(391, 399)
         self.verticalLayout_2 = QtGui.QVBoxLayout(Dialog)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
+        self.horizontalLayout_2 = QtGui.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
+        self.label_9 = QtGui.QLabel(Dialog)
+        self.label_9.setObjectName(_fromUtf8("label_9"))
+        self.horizontalLayout_2.addWidget(self.label_9)
+        self.comboBox_synapse_type = QtGui.QComboBox(Dialog)
+        self.comboBox_synapse_type.setObjectName(_fromUtf8("comboBox_synapse_type"))
+        self.horizontalLayout_2.addWidget(self.comboBox_synapse_type)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
         self.tabWidget = QtGui.QTabWidget(Dialog)
         self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
         self.tab_basic = QtGui.QWidget()
@@ -110,6 +119,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(_translate("Dialog", "Synapse", None))
+        self.label_9.setText(_translate("Dialog", "Synapse Type:", None))
         self.label_6.setText(_translate("Dialog", "Name:", None))
         self.label_7.setText(_translate("Dialog", "description:", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_basic), _translate("Dialog", "Basic", None))

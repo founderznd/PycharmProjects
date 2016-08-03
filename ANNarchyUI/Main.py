@@ -1,14 +1,14 @@
 # coding:utf-8
 # main function
-
-
+import ast
 import json
 
+import ANNarchy
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import ConnectionView
-from ui import NeuronUI
+from ui import NeuronUI, Simulation_Definition
 
 
 class MainWindow(QMainWindow):
@@ -33,11 +33,13 @@ class MainWindow(QMainWindow):
         self.info_stack = self.scene.info_stack
         self.ui.vbox_information.addWidget(self.info_stack)
 
-        """connect tab1 to tab2, in order to get the data from items of tab1"""
-        # it is better to use signal
-        # self.ui.connectTo(self.ui.gview_network)
-        # self.ui.gview_network.scene.sig_replot.connect(self.ui..slot_DrawPlot)
+        self.simulation_dialog = QDialog()
+        self.simulation_ui = Simulation_Definition.Ui_Dialog()
+        self.simulation_ui.setupUi(self.simulation_dialog)
 
+        self.error_input = QString()
+
+        """signal and slot"""
         self.ui.simulation_button.clicked.connect(self.slot_simulation)
         self.ui.actionNew.triggered.connect(self.slot_actionNew)
         self.ui.actionOpen.triggered.connect(self.slot_actionLoad)
@@ -209,6 +211,7 @@ class MainWindow(QMainWindow):
                     info = self.scene.addPopulation(QPointF(item[0], item[1]))
                     info.setCurrentData(item[2])
                     info.setCurrentMonitor(item[3])
+                    info.setCurrentNeuron(self.scene.neurondict.get(info.currentData.get("neuron")))
             except IndexError:
                 print IndexError, " in Populations"
 
@@ -228,6 +231,7 @@ class MainWindow(QMainWindow):
                     info = self.scene.addProjection(source, dest)
                     info.setCurrentData(item[4])
                     info.setCurrentConnector(item[5])
+                    info.setCurrentSynapse(self.scene.synapsedict.get(info.currentData.get("synapse")))
             except IndexError:
                 print IndexError, " in Projections"
 
@@ -235,153 +239,199 @@ class MainWindow(QMainWindow):
 
     # todo finish simulation
     def slot_simulation(self):
-        self.scene.update()
-        """simulation 1"""
-        # self.ui.tab_matplot.slot_DrawPlot()
+        """simulation:
+        + 1 check all inputs
+        + 2 define neuron
+        + 3 create population regard to defined neuron
+        + 4 turn to step 2 until all populations are created
+        + 5 define synapse
+        + 6 create projection between populations regard to defined synapse
+        + 7 set connector of each projection
+        + 8 turn to step 5 until all projections are created
+        + 9 compile()
+        + 10 monitor
+        + 11 simulate
+        + 12 plot()
+        :return:
+        :rtype:
+        """
+        annarchy_neurons = []
+        annarchy_synapses = []
+        annarchy_populations = []
+        annarchy_projections = []
+        """check all inputs"""
+        if not self.checkAllSignals():
+            QMessageBox().information(self, "information", "please check your input:\n" + self.error_input)
+            return
 
-        # setup(dt=0.1)
-        #
-        # COBA = Neuron(
-        #         parameters="""
-        #         El = -60.0          : population
-        #         Vr = -60.0          : population
-        #         Erev_exc = 0.0      : population
-        #         Erev_inh = -80.0    : population
-        #         Vt = -50.0          : population
-        #         tau = 20.0          : population
-        #         tau_exc = 5.0       : population
-        #         tau_inh = 10.0      : population
-        #         I = 20.0            : population
-        #     """,
-        #         equations="""
-        #         tau * dv/dt = (El - v) + g_exc * (Erev_exc - v) + g_inh * (Erev_inh - v ) + I
-        #
-        #         tau_exc * dg_exc/dt = - g_exc
-        #         tau_inh * dg_inh/dt = - g_inh
-        #     """,
-        #         spike="v > Vt",
-        #         reset="v = Vr",
-        #         refractory=5.0
-        # )
-        #
-        # CUBA = Neuron(
-        #         parameters="""
-        #         El = -49.0      : population
-        #         Vr = -60.0      : population
-        #         Vt = -50.0      : population
-        #         tau_m = 20.0    : population
-        #         tau_exc = 5.0   : population
-        #         tau_inh = 10.0  : population
-        #     """,
-        #         equations="""
-        #         tau_m * dv/dt = (El - v) + g_exc + g_inh
-        #
-        #         tau_exc * dg_exc/dt = - g_exc
-        #         tau_inh * dg_inh/dt = - g_inh
-        #     """,
-        #         spike="v > Vt",
-        #         reset="v = Vr",
-        #         refractory=5.0
-        # )
-        #
-        # P = Population(geometry=4000, neuron=COBA)
-        # Pe = P[:3200]
-        # Pi = P[3200:]
-        #
-        # P.v = Normal(-55.0, 5.0)
-        # P.g_exc = Normal(4.0, 1.5)
-        # P.g_inh = Normal(20.0, 12.0)
-        #
-        # Ce = Projection(pre=Pe, post=P, target='exc')
-        # Ce.connect_fixed_probability(weights=0.6, probability=0.02)
-        #
-        # Ci = Projection(pre=Pi, post=P, target='inh')
-        # Ci.connect_fixed_probability(weights=6.7, probability=0.02)
-        #
-        # compile()
-        #
-        # m = Monitor(P, ['spike'])
-        #
-        # simulate(1000.)
-        #
-        # data = m.get('spike')
-        #
-        # t, n = m.raster_plot(data)
-        #
-        # print('Mean firing rate in the population: ' + str(len(t) / 4000.) + 'Hz')
-        #
-        # plt = self.ui.tab_matplot.plt
-        # plt.plot(t, n, '.', markersize=0.5)
-        # plt.set_xlabel('Time (ms)')
-        # plt.set_ylabel('# neuron')
+        for item in self.scene.items():
+            """create poisson population and its neuron"""
+            if isinstance(item, ConnectionView.Population):
+                if item.info.currentData.get("neuron") == "PoissonNeuron":
+                    # convert QString to Tuple
+                    geo_tuple = ast.literal_eval(item.info.currentData.get("geometry"))
+                    pop = ANNarchy.PoissonPopulation(
+                            geo_tuple,
+                            item.info.currentData.get("name"),
+                            item.info.currentData.get("rates"),
+                            item.info.currentData.get("target"),
+                            item.info.currentData.get("parameters"),
+                            item.info.currentData.get("refractory")
+                    )
+                    annarchy_populations.append(pop)
+                else:
+                    """
+                      *Parameters*:
+                          * **parameters**: parameters of the neuron and their initial value.
+                          * **equations**: equations defining the temporal evolution of variables.
+                          * **spike**: condition to emit a spike (only for spiking neurons).
+                          * **reset**: changes to the variables after a spike (only for spiking neurons).
+                          * **refractory**: refractory period of a neuron after a spike (only for spiking neurons).
+                          * **functions**: additional functions used in the variables' equations.
+                          * **name**: name of the neuron type (used for reporting only).
+                          * **description**: short description of the neuron type (used for reporting).
+                      """
+                    neuron = ANNarchy.Neuron(
+                            item.info.currentNeuron.get("parameters"),
+                            item.info.currentNeuron.get("equations"),
+                            item.info.currentNeuron.get("spike"),
+                            item.info.currentNeuron.get("reset"),
+                            item.info.currentNeuron.get("refractory"),
+                            item.info.currentNeuron.get("functions"),
+                            item.info.currentNeuron.get("name"),
+                            item.info.currentNeuron.get("description"),
+                    )
+                    annarchy_neurons.append(neuron)
 
-        """simulation 2"""
-        # IF = Neuron(
-        #         parameters="""
-        #         tau_m = 10.0
-        #         tau_e = 5.0
-        #         vt = -54.0
-        #         vr = -60.0
-        #         El = -74.0
-        #         Ee = 0.0
-        #     """,
-        #         equations="""
-        #         tau_m * dv/dt = El - v + g_exc * (Ee - vr) : init = -60.0
-        #         tau_e * dg_exc/dt = -g_exc
-        #     """,
-        #         spike="""
-        #         v > vt
-        #     """,
-        #         reset="""
-        #         v = vr
-        #     """
-        # )
-        #
-        # F = 15.0
-        # N = 1000
-        # Input = PoissonPopulation(name='Input', geometry=N, rates=F)
-        # Output = Population(name='Output', geometry=1, neuron=IF)
-        #
-        # proj = Projection(
-        #         pre=Input,
-        #         post=Output,
-        #         target='exc',
-        #         synapse=STDP(tau_plus=20.0, tau_minus=20.0, A_plus=0.01, A_minus=0.0105, w_max=0.01)
-        # )
-        #
-        # proj.connect_all_to_all(weights=Uniform(0.0, 0.01))
-        # # connector = self.info_stack.currentWidget().ui.comboBox_connectivity.currentText()
-        # # connector = self.ui.gview_network.scene.currentItem.info.ui.comboBox_connectivity.currentText()
-        #
-        # compile()
-        #
-        # Mi = Monitor(Input, 'spike')
-        # Mo = Monitor(Output, 'spike')
-        #
-        # simulate(100000, measure_time=True)
-        #
-        # input_spikes = Mi.get('spike')
-        # output_spikes = Mo.get('spike')
-        #
-        # output_rate = Mo.smoothed_rate(output_spikes, 100.0)
-        #
-        # weights = proj.w[0]
-        #
-        # self.ui.tab_matplot.plt1.plot(output_rate[0, :])
-        # self.ui.tab_matplot.plt2.plot(weights, '.')
-        # self.ui.tab_matplot.plt3.hist(weights, bins=20)
-        # print self.ui.gview_network.scene.neuronlist
-        # print self.ui.gview_network.scene.synapselist
-        # print self.ui.gview_network.scene.neuronsdict
-        for pop in self.scene.items():
-            if isinstance(pop, ConnectionView.Population):
-                pop.info.mui.widget_matplot.slot_draw_plot(pop.info.currentMonitor)
+                    pop = ANNarchy.Population(
+                            ast.literal_eval(item.info.currentData.get("geometry")),
+                            neuron,
+                            item.info.currentData.get("name"),
+                            None
+                    )
+                    annarchy_populations.append(pop)
+
+        for item in self.scene.items():
+            """create projection and its synapse"""
+            if isinstance(item, ConnectionView.Projection):
+                """
+                *Parameters*:
+                    * **parameters**: parameters of the neuron and their initial value.
+                    * **equations**: equations defining the temporal evolution of variables.
+                    * **psp**: influence of a single synapse on the post-synaptic neuron (default for rate-coded:
+                    w*pre.r).
+                    * **operation**: operation (sum, max, min, mean) performed by the post-synaptic neuron on the
+                    individual psp (rate-coded only, default=sum).
+                    * **pre_spike**: updating of variables when a pre-synaptic spike is received (spiking only).
+                    * **post_spike**: updating of variables when a post-synaptic spike is emitted (spiking only).
+                    * **functions**: additional functions used in the equations.
+                    * **name**: name of the synapse type (used for reporting only).
+                    * **description**: short description of the synapse type (used for reporting).
+                """
+                # synapse = ANNarchy.Synapse(
+                #         item.info.currentSynapse.get("parameters"),
+                #         item.info.currentSynapse.get("equations"),
+                #         item.info.currentSynapse.get("psp"),
+                #         "sum",
+                #         item.info.currentSynapse.get("pre_spike"),
+                #         item.info.currentSynapse.get("post_spike"),
+                #         item.info.currentSynapse.get("functions"),
+                #         None,
+                #         None,
+                #         item.info.currentSynapse.get("name"),
+                #         item.info.currentSynapse.get("description")
+                # )
+                synapse = ANNarchy.STDP()
+                annarchy_synapses.append(synapse)
+                """
+                *Parameters*:
+                    * **pre**: pre-synaptic population (either its name or a ``Population`` object).
+                    * **post**: post-synaptic population (either its name or a ``Population`` object).
+                    * **target**: type of the connection.
+                    * **synapse**: a ``Synapse`` instance.
+                    * **name**: unique name of the projection (optional).
+
+                    By default, the synapse only ensures linear synaptic transmission:
+
+                    * For rate-coded populations: ``psp = w * pre.r``
+                    * For spiking populations: ``g_target += w``
+                """
+                proj = ANNarchy.Projection(
+                        item.info.currentData.get("pre"),
+                        item.info.currentData.get("post"),
+                        item.info.currentData.get("target"),
+                        synapse,
+                        item.info.currentData.get("name"),
+                )
+                annarchy_projections.append(proj)
+                """set connector"""
+                connector = item.info.currentConnector
+                if connector.get("id") == "page_cata":
+                    weights = connector.get("weights")
+                    weights_max = connector.get("weights_max")
+                    weights_min = connector.get("weights_min")
+                    delays = connector.get("delays")
+                    delays_max = connector.get("delays_max")
+                    delays_min = connector.get("delays_min")
+                    asc = connector.get("asc")
+                    fmw = connector.get("fmw")
+                    if type(weights) is not float:
+                        weights = ANNarchy.Uniform(weights_min, weights_max)
+                    if type(delays) is not float:
+                        delays = ANNarchy.Uniform(delays_min, delays_max)
+                    proj.connect_all_to_all(weights)
+
+        ANNarchy.compile()
+
+        self.simulation_dialog.show()
+
+    def checkAllSignals(self):
+        isAllRight = True
+        for item in self.scene.items():
+            """population"""
+            if isinstance(item, ConnectionView.Population):
+                """name"""
+                data = item.info.currentData.get("name")
+                if data == "":
+                    # print  "Population: ", item.info.currentData.get("name"), " has no name"
+                    self.error_input.append("Population: " + item.info.currentData.get("name") + " has no name\n")
+                    isAllRight = False
+                """geometry"""
+                data = item.info.currentData.get("geometry")
+                if data == "":
+                    # print  "Population: ", item.info.currentData.get("name"), " has no geometry"
+                    self.error_input.append("Population: " + item.info.currentData.get("name") + " has no geometry\n")
+                    isAllRight = False
+                """currentMonitor"""
+                if item.info.currentMonitor.get("enabled"):
+                    data = item.info.currentMonitor.get("variables")
+                    if data == "":
+                        # print  "Population: ", item.info.currentData.get("name"), " has no variables"
+                        self.error_input.append(
+                                "Population: " + item.info.currentData.get("name") + " has no variables\n")
+                        isAllRight = False
+            """projection"""
+            if isinstance(item, ConnectionView.Projection):
+                """name"""
+                data = item.info.currentData.get("name")
+                if data == "":
+                    # print  "Projection: ", item.info.currentData.get("name"), " has no name"
+                    self.error_input.append("Projection: " + item.info.currentData.get("name") + " has no name\n")
+                    isAllRight = False
+                """target"""
+                data = item.info.currentData.get("target")
+                if data == "":
+                    # print  "Projection: ", item.info.currentData.get("name"), " has no target"
+                    self.error_input.append("Projection: " + item.info.currentData.get("name") + " has no target\n")
+                    isAllRight = False
+        return isAllRight
 
 
 if __name__ == '__main__':
-    import sys
+    import sys, gc
 
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
-    sys.exit(app.exec_())
+    app.exec_()
+    sys.exit(gc.collect())

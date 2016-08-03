@@ -13,12 +13,12 @@ class ItemType(object):
     POPULATION = 1
 
 
-class PopulationButton(QToolButton):
+class ViewButton(QToolButton):
     SIZE = 50
 
     def __init__(self, iconpath):
-        super(PopulationButton, self).__init__()
-        self.setFixedSize(PopulationButton.SIZE, PopulationButton.SIZE)
+        super(ViewButton, self).__init__()
+        self.setFixedSize(ViewButton.SIZE, ViewButton.SIZE)
 
         # these two lines codes below solved the warning
         # libpng warning: iCCP: known incorrect sRGB profile
@@ -40,14 +40,14 @@ class NeuralConnectionView(QGraphicsView):
         self.setScene(self.scene)
 
         self.layout = QGridLayout(self)
-        self.population_button = PopulationButton("image/neuron.png")
+        self.population_button = ViewButton("image/population.png")
         self.population_button.setToolTip("click to add a Population to scene")
 
-        self.center_button = PopulationButton("image/centerOn.png")
+        self.center_button = ViewButton("image/centerOn.png")
         self.center_button.setToolTip("focus on the selected Population")
         self.center_button.setCheckable(False)
 
-        self.dragdrop_button = PopulationButton("image/Drag_Drop.png")
+        self.dragdrop_button = ViewButton("image/Drag_Drop.png")
         self.dragdrop_button.setToolTip("swith drag mode")
         self.dragdrop_button.setCheckable(True)
 
@@ -57,6 +57,9 @@ class NeuralConnectionView(QGraphicsView):
         self.layout.setRowStretch(self.layout.rowCount(), 1)
         self.layout.setColumnStretch(self.layout.columnCount(), 1)
 
+        # self.center_button.clicked.connect(self.slot_centerOn)
+        # self.dragdrop_button.clicked.connect(self.slot_swith_dragMode)
+        # self.population_button.clicked[bool].connect(self.scene.setPrepared)
         self.connect(self.center_button, SIGNAL("clicked()"), self.slot_centerOn)
         self.connect(self.dragdrop_button, SIGNAL("clicked()"), self.slot_swith_dragMode)
         self.connect(self.population_button, SIGNAL("clicked(bool)"), self.scene.setPrepared)
@@ -173,16 +176,16 @@ class MyScene(QGraphicsScene):
             QString("Spiking synapse")
         ]
         self.synapsedict.update({
-            "None": {},
-            "Oja" : {
+            "None"           : {
+                "name": "None"
+            },
+            "Oja"            : {
                 "parameters": "tau = 5000\n"
                               "alpha = 8.0",
                 "equations" : "tau * dw / dt = pre.r * post.r - alpha * post.r^2 * w",
                 "functions" : "product(x,y) = x * y",
                 "name"      : "Oja",
-            }
-        })
-        self.synapsedict.update({
+            },
             "Spiking synapse": {
                 "parameters" : "",
                 "equations"  : "",
@@ -201,6 +204,12 @@ class MyScene(QGraphicsScene):
         self.isPrepared = False
         self.info_stack = QStackedWidget()
 
+        self.timer = QTimer(self)
+        self.timer.setInterval(40)
+        self.transparency = 0
+        self.connect(self.timer, SIGNAL("timeout()"), self.slot_change_transparency)
+        self.pix = QPixmap("image/population.png")
+
     def setCursor(self, cursor=(int, QCursor)):
         for view in self.views():
             view.setCursor(cursor)
@@ -217,7 +226,7 @@ class MyScene(QGraphicsScene):
 
     def slot_monitor(self):
         if isinstance(self.currentItem, Population):
-            self.currentItem.info.slot_monitor()
+            self.currentItem.info.openMonitorDialog()
 
     def slot_set_neuron(self):
         if isinstance(self.currentItem, Population):
@@ -233,15 +242,27 @@ class MyScene(QGraphicsScene):
 
     def setPrepared(self, isPrepared):
         if isPrepared:
-            pix = QPixmap("image/neuron.png")
-            pix = pix.scaled(Population.SIZE, Population.SIZE)
-            cursor = QCursor(pix)
-            self.setCursor(cursor)
+            self.timer.start()
         else:
+            self.timer.stop()
             self.setCursor(Qt.ArrowCursor)
             for view in self.views():
                 view.population_button.setChecked(False)
         self.isPrepared = isPrepared
+
+    def slot_change_transparency(self):
+        if self.transparency < 180:
+            self.transparency += 1
+        else:
+            self.transparency = 0
+        pix = QPixmap(self.pix.width() + 1, self.pix.height() + 1)
+        pix.fill(QColor(0, 0, 0, 0))
+        painter = QPainter(pix)
+        painter.setOpacity(math.sin(self.transparency / math.pi))
+        painter.drawPixmap(0, 0, self.pix)
+        painter.drawRoundRect(self.pix.rect())
+        painter.end()
+        self.setCursor(QCursor(pix))
 
     def update(self, *__args):
         super(MyScene, self).update()
@@ -308,13 +329,6 @@ class MyScene(QGraphicsScene):
                     proj.update()
                     self.update()
 
-    # def mouseReleaseEvent(self, e):
-    #     super(MyScene, self).mouseReleaseEvent(e)
-    #     if e.button() == Qt.LeftButton and self.isReadyToProjection is True:
-    #         print "begin"
-    #         self.tmp = QLineF(self.source.scenePos(), e.scenePos())
-    #         self.addLine(self.tmp)
-
     def mousePressEvent(self, e):
         super(MyScene, self).mousePressEvent(e)
         self.currentItem = self.itemAt(e.scenePos())
@@ -324,7 +338,6 @@ class MyScene(QGraphicsScene):
         if e.button() == Qt.LeftButton:
             """add a new Population"""
             if self.currentItem is None and self.isPrepared:
-                # self.setCursor(Qt.ArrowCursor)
                 self.isReadyToProjection = False
                 self.addPopulation(e.scenePos())
             """show info of Item"""
@@ -357,9 +370,8 @@ class MyScene(QGraphicsScene):
 
 
 class Projection(QGraphicsPathItem):
-    OffSet = 40
     ArrowSize = 14
-    LineWidth = 6
+    LineWidth = 4
 
     def __init__(self, sourceNode, destNode, synapsedict=None, synapselist=None, connectorlist=None):
         super(Projection, self).__init__()
@@ -406,26 +418,27 @@ class Projection(QGraphicsPathItem):
             brush.setColor(color)
 
         self.setPen(pen)
-        # self.setBrush(brush)
 
         if self.sourcePoint != self.destPoint:
 
+            self.setBrush(brush)
+
             l = QLineF(self.sourcePoint, self.destPoint)
-            l.setLength(l.length() - Projection.OffSet * math.sqrt(2) - Projection.ArrowSize)
+            l.setLength(l.length() - Population.SIZE / 2 * math.sqrt(2) - Projection.ArrowSize)
             self.endPoint = l.p2()
-            l.setLength(Projection.OffSet * math.sqrt(2))
+            l.setLength(Population.SIZE / 2 * math.sqrt(2))
             self.beginPoint = l.p2()
 
             # begin painting
             l = QLineF(self.beginPoint, self.endPoint)
             v1 = l.unitVector()
-            l.setLength(l.length() - Projection.OffSet * math.sqrt(2))
+            l.setLength(l.length() - Population.SIZE / 2 * math.sqrt(2))
             v1.setLength(Projection.ArrowSize)
             # this is important
             v1.translate(self.endPoint - self.beginPoint)
 
             v2 = v1.normalVector()
-            v2.setLength(v1.length() * 0.4)
+            v2.setLength(v1.length() * 0.3)
             v3 = v2.normalVector().normalVector()
 
             p0 = v1.p1()
@@ -435,34 +448,37 @@ class Projection(QGraphicsPathItem):
 
             dist = QLineF(self.sourcePoint, self.destPoint)
 
-            if dist.length() > Population.SIZE * math.sqrt(2) + Projection.ArrowSize:
+            if dist.length() > Population.SIZE * math.sqrt(2) + self.ArrowSize:
                 qpath.moveTo(self.beginPoint)
                 qpath.lineTo(self.endPoint)
                 qpath.addPolygon(QPolygonF([p0, p2, p1, p3, p0]))
                 v3.setLength(20)
                 qpath.translate(v3.p2() - v3.p1())
         else:
-            rect = QRectF(0, 0, math.sqrt(2) * Population.SIZE, math.sqrt(2) * Population.SIZE)
-            rect.moveCenter(self.sourcePoint)
+
+            rect = QRectF(0, 0, Population.neuron_size * math.sqrt(2) * 2, Population.neuron_size * math.sqrt(2) * 2)
             # begin draw arrow
-            v1 = QLineF(rect.topLeft(), rect.topRight()).unitVector()
+            v1 = QLineF(rect.topLeft(), rect.bottomLeft()).unitVector()
             v1.setLength(self.ArrowSize)
-            v1.translate(QPointF(self.sourcePoint.x(), rect.top()) - rect.topLeft())
+            v1.translate(QPointF(rect.left(), rect.center().y() - self.ArrowSize / 2) - rect.topLeft())
             v2 = v1.normalVector()
-            v2.setLength(v1.length() * 0.4)
+            v2.setLength(v1.length() * 0.3)
             v3 = v2.normalVector().normalVector()
 
             p0 = v1.p1()
             p1 = v1.p2()
             p2 = v2.p2()
             p3 = v3.p2()
-            qpath.addPolygon(QPolygonF([p0, p2, p1, p3, p0]))
-            # qpath.addEllipse(rect)
+
+            qpath.moveTo(rect.center().x() + Population.neuron_size, rect.center().y() - Population.neuron_size)
+            qpath.arcTo(rect, 45, 270)
             qpath.moveTo(p0)
-            qpath.arcTo(rect, 90, 270)
-            # c1 = rect.bottomLeft()
-            # c2 = self.sourcePoint
-            # qpath.cubicTo(c1, c2, p1)
+            qpath.addPolygon(QPolygonF([p0, p2, p1, p3, p0]))
+
+            qpath.translate(
+                    self.sourcePoint.x() - Population.neuron_size * (math.sqrt(2) + 1),
+                    self.sourcePoint.y() - Population.neuron_size * math.sqrt(2)
+            )
 
         return qpath
 
@@ -485,12 +501,15 @@ class Projection(QGraphicsPathItem):
 
 
 class Population(QGraphicsItem):
-    SIZE = 80
+    SIZE = 90
+    neuron_size = 30
+    font_size = 12
 
     def __init__(self, neurondict=None, neuronlist=None):
         super(Population, self).__init__()
         self.type = ItemType.POPULATION
-        self.pix = QPixmap("image/neuron.png").scaled(Population.SIZE, Population.SIZE)
+        self.pix = QPixmap("image/neuron1.png").scaled(Population.neuron_size, Population.neuron_size)
+        self.pix2 = QPixmap("image/neuron2.png").scaled(Population.neuron_size, Population.neuron_size)
         self.setFlag(QGraphicsItem.ItemIsMovable)
         self.setFlag(QGraphicsItem.ItemIsSelectable)
         # make sure items alway above edges
@@ -502,10 +521,31 @@ class Population(QGraphicsItem):
             self.info = Informations.PopulationInfo()
 
     def boundingRect(self):
-        return QRectF(-self.pix.width() / 2, -self.pix.height() / 2, self.pix.width(), self.pix.height() * 1.2)
+        return QRectF(
+                -self.SIZE * 0.5 - 3,
+                -self.SIZE * 0.5 - self.font_size * 1.5,
+                self.SIZE + 6,
+                self.SIZE + self.font_size * 1.5 * 2
+        )
 
     def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
-        QPainter.drawPixmap(-self.pix.width() / 2, -self.pix.height() / 2, self.pix)
+
+        QPainter.drawPixmap(-self.pix.width() * 0.5, -self.pix.height() * 1.5, self.pix)
+        QPainter.drawPixmap(-self.pix.width() * 1.5, -self.pix.height() * 0.5, self.pix)
+        QPainter.drawPixmap(self.pix.width() * 0.5, -self.pix.height() * 0.5, self.pix)
+        QPainter.drawPixmap(-self.pix.width() * 0.5, self.pix.height() * 0.5, self.pix)
+        QPainter.drawPixmap(-self.pix2.width() * 0.5, -self.pix2.height() * 0.5, self.pix2)
+
+        font = QFont()
+        font.setPointSize(self.font_size)
+        QPainter.setFont(font)
+        """write name of population"""
         QPainter.drawText(self.boundingRect(), Qt.AlignBottom | Qt.AlignHCenter, self.info.currentData.get("name"))
+        """write geometry of population"""
+        QPainter.drawText(self.boundingRect(), Qt.AlignTop | Qt.AlignHCenter, self.info.currentData.get("geometry"))
+
+        pen = QPen()
+        pen.setStyle(Qt.DashLine)
+        QPainter.setPen(pen)
         if self.isSelected():
             QPainter.drawRoundRect(self.boundingRect())
