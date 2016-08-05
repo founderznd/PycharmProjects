@@ -10,6 +10,8 @@ from PyQt4.QtGui import *
 import ConnectionView
 from ui import NeuronUI, Simulation_Definition
 
+from pylab import *
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -23,9 +25,9 @@ class MainWindow(QMainWindow):
         self.saved_data = {
             "Populations": [],
             "Projections": [],
-            "neuronlist" : [],
+            "neuronlist": [],
             "synapselist": [],
-            "neurondict" : {},
+            "neurondict": {},
             "synapsedict": {}
         }
 
@@ -62,11 +64,11 @@ class MainWindow(QMainWindow):
         ) -> QMessageBox.StandardButton
         """
         button = QMessageBox().question(
-                self,
-                "Warning!",
-                "Do you want to save this file before create a new one?",
-                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
-                QMessageBox.Yes
+            self,
+            "Warning!",
+            "Do you want to save this file before create a new one?",
+            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+            QMessageBox.Yes
         )
         if button == QMessageBox.Cancel:
             return
@@ -94,10 +96,10 @@ class MainWindow(QMainWindow):
             ) -> QString
             """
             self.filename = QFileDialog().getSaveFileName(
-                    self,
-                    "save file",
-                    QDir().currentPath() + "/save",
-                    "*.save;;*.*"
+                self,
+                "save file",
+                QDir().currentPath() + "/save",
+                "*.save;;*.*"
             )
             if not self.filename:
                 return
@@ -117,7 +119,7 @@ class MainWindow(QMainWindow):
         self.filename = ""
         self.slot_actionSave()
 
-    def create_JSON_Object(self, data=None):
+    def create_JSON_Object(self, data = None):
         """
         encode data to a json string and return it
 
@@ -143,11 +145,11 @@ class MainWindow(QMainWindow):
                 pops.append((item.x(), item.y(), item.info.currentData, item.info.currentMonitor))
             if item.type == ConnectionView.ItemType.PROJECTION:
                 projs.append(
-                        (
-                            item.sourcePoint.x(), item.sourcePoint.y(),
-                            item.destPoint.x(), item.destPoint.y(),
-                            item.info.currentData, item.info.currentConnector
-                        )
+                    (
+                        item.sourcePoint.x(), item.sourcePoint.y(),
+                        item.destPoint.x(), item.destPoint.y(),
+                        item.info.currentData, item.info.currentConnector
+                    )
                 )
         self.saved_data.update({"Populations": pops})
         self.saved_data.update({"Projections": projs})
@@ -271,12 +273,12 @@ class MainWindow(QMainWindow):
                     # convert QString to Tuple
                     geo_tuple = ast.literal_eval(item.info.currentData.get("geometry"))
                     pop = ANNarchy.PoissonPopulation(
-                            geo_tuple,
-                            item.info.currentData.get("name"),
-                            item.info.currentData.get("rates"),
-                            item.info.currentData.get("target"),
-                            item.info.currentData.get("parameters"),
-                            item.info.currentData.get("refractory")
+                        geo_tuple,
+                        item.info.currentData.get("name"),
+                        item.info.currentData.get("rates"),
+                        item.info.currentData.get("target"),
+                        item.info.currentData.get("parameters"),
+                        item.info.currentData.get("refractory")
                     )
                     annarchy_populations.append(pop)
                 else:
@@ -292,22 +294,22 @@ class MainWindow(QMainWindow):
                           * **description**: short description of the neuron type (used for reporting).
                       """
                     neuron = ANNarchy.Neuron(
-                            item.info.currentNeuron.get("parameters"),
-                            item.info.currentNeuron.get("equations"),
-                            item.info.currentNeuron.get("spike"),
-                            item.info.currentNeuron.get("reset"),
-                            item.info.currentNeuron.get("refractory"),
-                            item.info.currentNeuron.get("functions"),
-                            item.info.currentNeuron.get("name"),
-                            item.info.currentNeuron.get("description"),
+                        item.info.currentNeuron.get("parameters"),
+                        item.info.currentNeuron.get("equations"),
+                        item.info.currentNeuron.get("spike"),
+                        item.info.currentNeuron.get("reset"),
+                        item.info.currentNeuron.get("refractory"),
+                        item.info.currentNeuron.get("functions"),
+                        item.info.currentNeuron.get("name"),
+                        item.info.currentNeuron.get("description"),
                     )
                     annarchy_neurons.append(neuron)
 
                     pop = ANNarchy.Population(
-                            ast.literal_eval(item.info.currentData.get("geometry")),
-                            neuron,
-                            item.info.currentData.get("name"),
-                            None
+                        ast.literal_eval(item.info.currentData.get("geometry")),
+                        neuron,
+                        item.info.currentData.get("name"),
+                        None
                     )
                     annarchy_populations.append(pop)
 
@@ -341,7 +343,7 @@ class MainWindow(QMainWindow):
                 #         item.info.currentSynapse.get("name"),
                 #         item.info.currentSynapse.get("description")
                 # )
-                synapse = ANNarchy.STDP()
+                synapse = ANNarchy.STDP(tau_plus=20.0, tau_minus=20.0, A_plus=0.01, A_minus=0.0105, w_max=0.01)
                 annarchy_synapses.append(synapse)
                 """
                 *Parameters*:
@@ -357,11 +359,11 @@ class MainWindow(QMainWindow):
                     * For spiking populations: ``g_target += w``
                 """
                 proj = ANNarchy.Projection(
-                        item.info.currentData.get("pre"),
-                        item.info.currentData.get("post"),
-                        item.info.currentData.get("target"),
-                        synapse,
-                        item.info.currentData.get("name"),
+                    item.info.currentData.get("pre"),
+                    item.info.currentData.get("post"),
+                    item.info.currentData.get("target"),
+                    synapse,
+                    item.info.currentData.get("name"),
                 )
                 annarchy_projections.append(proj)
                 """set connector"""
@@ -381,9 +383,27 @@ class MainWindow(QMainWindow):
                         delays = ANNarchy.Uniform(delays_min, delays_max)
                     proj.connect_all_to_all(weights)
 
-        ANNarchy.compile()
+        ANNarchy.core.Global.config['verbose'] = True
+        # compile
+        ANNarchy.compile(debug_build = True)
 
-        self.simulation_dialog.show()
+        Mo = None
+        Mo = ANNarchy.Monitor(annarchy_populations[1], 'spike')
+
+        # self.simulation_dialog.show()
+        ANNarchy.simulate(1000, measure_time = True)
+
+        # here use monitor
+        output_spikes = Mo.get('spike')
+        output_rate = Mo.smoothed_rate(output_spikes, 100.0)
+        weights = annarchy_projections[0].w[0]
+        subplot(3, 1, 1)
+        plot(output_rate[0, :])
+        subplot(3, 1, 2)
+        plot(weights, '.')
+        subplot(3, 1, 3)
+        hist(weights, bins = 20)
+        show()
 
     def checkAllSignals(self):
         isAllRight = True
@@ -408,7 +428,7 @@ class MainWindow(QMainWindow):
                     if data == "":
                         # print  "Population: ", item.info.currentData.get("name"), " has no variables"
                         self.error_input.append(
-                                "Population: " + item.info.currentData.get("name") + " has no variables\n")
+                            "Population: " + item.info.currentData.get("name") + " has no variables\n")
                         isAllRight = False
             """projection"""
             if isinstance(item, ConnectionView.Projection):
