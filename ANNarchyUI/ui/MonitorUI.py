@@ -36,7 +36,7 @@ class Ui_Dialog(object):
         self.frame.setObjectName(_fromUtf8("frame"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.frame)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.widget_matplot = OutputGraphic(self.frame)
+        self.widget_matplot = MyMonitor(self.frame)
         self.widget_matplot.setObjectName(_fromUtf8("widget_matplot"))
         self.verticalLayout_2.addWidget(self.widget_matplot)
         self.horizontalLayout_3.addWidget(self.frame)
@@ -104,7 +104,7 @@ class Ui_Dialog(object):
         self.label_8.setText(_translate("Dialog", "variables:", None))
         self.pushButton_monitor.setText(_translate("Dialog", "Monitor", None))
 
-from PlotView import OutputGraphic
+from ANNarchyData import MyMonitor
 
 if __name__ == "__main__":
     import sys

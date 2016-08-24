@@ -1,18 +1,22 @@
 # coding:utf-8
 
+from pylab import *
+
+import ANNarchy
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+import ANNarchyData
 from ui import Population_Information, Neuron_Definition, Projection_Information, Synapse_Definition, \
     Connector_Definition, MonitorUI
 
 
 # this class is used to store all Informations of Population
 class PopulationInfo(QWidget):
-    sig_neuron = pyqtSignal(dict, list)  # synchronize the neuron list of each population
+    sig_neuron = pyqtSignal(dict)  # synchronize the neuron list of each population
     sig_name = pyqtSignal(QString)  # synchronize the names of pre_Pop and post_Pop in projection
 
-    def __init__(self, neurondict=None, neuronlist=None):
+    def __init__(self, neurondict=None):
         super(PopulationInfo, self).__init__()
 
         self.ui = Population_Information.Ui_Form()
@@ -45,9 +49,8 @@ class PopulationInfo(QWidget):
         }
         # store different kinds of neuron
         self.neurondict = dict()
-        self.neuronlist = list()
 
-        self.synchronizeDict(neurondict, neuronlist)
+        self.synchronizeDict(neurondict)
 
         self.ui.comboBox_neuron_type.setCurrentIndex(
                 self.ui.comboBox_neuron_type.findText(self.currentData.get("neuron")))
@@ -57,9 +60,9 @@ class PopulationInfo(QWidget):
             "obj"      : "",
             "variables": "",
             "period"   : 1.0,
-            "start"    : True
+            "start"    : True,
         }
-        self.setCurrentMonitor()
+
         self.monitor_dialog = QDialog()
         self.mui = MonitorUI.Ui_Dialog()
 
@@ -68,10 +71,12 @@ class PopulationInfo(QWidget):
         self.ui.comboBox_neuron_type.activated[QString].connect(self.openNeuronDefinition)
         self.ui.name.textChanged.connect(self.slot_updateName)
         self.ui.geometry.editingFinished.connect(self.slot_updateGeometry)
+        self.ui.comboBox_neuron_type.activated.connect(self.nui.comboBox_neuron_type.setCurrentIndex)
         """neuron"""
         self.nui.buttonBox.accepted.connect(self.slot_updateNeuron)
         self.nui.buttonBox.rejected.connect(self.slot_rollback)
         self.nui.comboBox_neuron_type.activated[QString].connect(self.openNeuronDefinition)
+        self.nui.comboBox_neuron_type.activated.connect(self.ui.comboBox_neuron_type.setCurrentIndex)
         """monitor"""
         self.ui.groupBox_monitor.toggled.connect(self.slot_updateEnable)
         self.ui.name.textChanged.connect(self.slot_updateObj)
@@ -79,7 +84,15 @@ class PopulationInfo(QWidget):
         self.ui.doubleSpinBox_period.valueChanged.connect(self.slot_updatePeriod)
         self.ui.lineEdit_variables.textChanged.connect(self.slot_updateVariables)
 
+    def slot_create_monitor(self, pops=ANNarchyData.MyPopulations, projs=ANNarchyData.MyProjections):
+        self.populations = pops
+        self.projections = projs
+        self.Mi = ANNarchy.Monitor(self.populations.getPopulation("Input"), 'spike')
+        self.Mo = ANNarchy.Monitor(self.populations.getPopulation("Output"), 'spike')
+        print "monitor object done!", self.Mi, self.Mo
+
     def openMonitorDialog(self):
+
         if self.currentMonitor.get("enabled") is True:
             if not self.monitor_dialog.layout():
                 self.mui.setupUi(self.monitor_dialog)
@@ -93,7 +106,7 @@ class PopulationInfo(QWidget):
                 self.mui.doubleSpinBox_period.valueChanged.connect(self.slot_updatePeriod)
                 self.mui.lineEdit_variables.textChanged.connect(self.slot_updateVariables)
                 self.mui.pushButton_monitor.clicked.connect(self.slot_draw_plot)
-            self.mui.widget_matplot.drawPlot(self.currentMonitor)
+            self.mui.widget_matplot.make_annarchy_objects(self.populations, self.projections, self.Mi, self.Mo)
             self.monitor_dialog.show()
         else:
             """
@@ -114,7 +127,7 @@ class PopulationInfo(QWidget):
             )
 
     def slot_draw_plot(self):
-        self.mui.widget_matplot.drawPlot(self.currentMonitor)
+        self.mui.widget_matplot.drawPlot()
 
     def slot_updateEnable(self, isChecked):
         self.currentMonitor.update({
@@ -153,39 +166,40 @@ class PopulationInfo(QWidget):
         if self.monitor_dialog.layout():
             self.mui.checkBox_start.setChecked(isChecked)
 
-    def setCurrentNeuron(self, currentNeuron=None):
-        if isinstance(currentNeuron, dict):
-            self.currentNeuron.update(currentNeuron)
+    def setCurrentNeuron(self, currentNeuron=dict):
+        self.currentNeuron.update(currentNeuron)
 
-    def setCurrentMonitor(self, currentMonitor=None):
-        if isinstance(currentMonitor, dict):
-            self.currentMonitor.update(currentMonitor)
+    def setCurrentMonitor(self, currentMonitor=dict):
+        self.currentMonitor.update(currentMonitor)
         self.ui.groupBox_monitor.setChecked(self.currentMonitor.get("enabled"))
         self.ui.lineEdit_variables.setText(self.currentMonitor.get("variables"))
         self.ui.checkBox_start.setChecked(self.currentMonitor.get("start"))
         self.ui.doubleSpinBox_period.setValue(self.currentMonitor.get("period"))
 
     # synchronize currentData
-    def setCurrentData(self, currentData=None):
-        if isinstance(currentData, dict):
-            self.currentData.update(currentData)
-            self.ui.name.setText(self.currentData.get("name"))
-            self.ui.geometry.setText(self.currentData.get("geometry"))
-            self.ui.comboBox_neuron_type.setCurrentIndex(
-                    self.ui.comboBox_neuron_type.findText(self.currentData.get("neuron")))
+    def setCurrentData(self, currentData=dict):
+        self.currentData.update(currentData)
+        self.ui.name.setText(self.currentData.get("name"))
+        self.ui.geometry.setText(self.currentData.get("geometry"))
+        index = self.ui.comboBox_neuron_type.findText(self.currentData.get("neuron"))
+        self.ui.comboBox_neuron_type.setCurrentIndex(index)
 
-    # add new neuron to list if necessary
-    def synchronizeDict(self, neurondict=None, neuronlist=None):
-        if isinstance(neurondict, dict) and isinstance(neuronlist, list):
-            self.neurondict.update(neurondict)
-            # for key in neuronlist:
-            #     if self.neuronlist.count(key) == 0:
-            #         self.neuronlist.append(key)
-            del self.neuronlist
-            self.neuronlist = neuronlist
-            for key in self.neuronlist:
-                if self.ui.comboBox_neuron_type.findText(key) == -1:
-                    self.ui.comboBox_neuron_type.insertItem(self.ui.comboBox_neuron_type.count(), key)
+    def synchronizeDict(self, neurondict=dict):
+        """synchronize neurondict and combobox
+
+        :param neurondict:
+        :type neurondict:
+        :return:
+        :rtype:
+        """
+        self.neurondict.update(neurondict)
+        nl = self.neurondict.keys()
+        nl.sort()
+        for key in nl:
+            if self.ui.comboBox_neuron_type.findText(key) == -1:
+                self.ui.comboBox_neuron_type.insertItem(self.ui.comboBox_neuron_type.count(), key)
+            if self.nui.comboBox_neuron_type.findText(key) == -1:
+                self.nui.comboBox_neuron_type.insertItem(self.nui.comboBox_neuron_type.count(), key)
 
     # refresh data
     def slot_updateName(self):
@@ -236,14 +250,11 @@ class PopulationInfo(QWidget):
 
             self.setCurrentNeuron(temp)
             self.neurondict.update({str(neuron_name): self.currentNeuron})
-            # update neuronlist
-            if self.neuronlist.count(neuron_name) == 0:
-                self.neuronlist.append(neuron_name)
             # add a neu type of neuron
-            self.synchronizeDict(self.neurondict, self.neuronlist)
+            self.synchronizeDict(self.neurondict)
             self.ui.comboBox_neuron_type.setCurrentIndex(self.ui.comboBox_neuron_type.findText(neuron_name))
 
-        self.sig_neuron.emit(self.neurondict, self.neuronlist)
+        self.sig_neuron.emit(self.neurondict)
         self.neuron_dialog.accept()
 
     # data rollback
@@ -252,23 +263,19 @@ class PopulationInfo(QWidget):
                 self.ui.comboBox_neuron_type.findText(self.currentData.get("neuron")))
         self.neuron_dialog.reject()
 
-    def openNeuronDefinition(self, s):
-        """
-        open the dialog of neuron definition
-        :param s:
-        :type s:
+    def openNeuronDefinition(self, neuron_name):
+        """open the dialog of neuron definition
+
+        :param neuron_name:
+        :type neuron_name:
         :return:
         :rtype:
         """
-        """synchronize combobox_neuron_type first"""
-        l = [self.ui.comboBox_neuron_type.itemText(i) for i in range(self.ui.comboBox_neuron_type.count())]
-        for item in l:
-            if self.nui.comboBox_neuron_type.findText(item) == -1:
-                self.nui.comboBox_neuron_type.addItem(item)
-        self.nui.comboBox_neuron_type.setCurrentIndex(self.ui.comboBox_neuron_type.findText(s))
 
+        self.nui.comboBox_neuron_type.setCurrentIndex(self.ui.comboBox_neuron_type.findText(neuron_name))
         self.nui.tabWidget.setCurrentIndex(0)
-        neuron = self.neurondict.get(str(s))
+
+        neuron = self.neurondict.get(str(neuron_name))
         if neuron:
             name = neuron.get("name")
             parameters = neuron.get("parameters")
@@ -299,7 +306,7 @@ class PopulationInfo(QWidget):
             self.nui.neurontype.setReadOnly(False)
 
         """modify special neuron and populaiton"""
-        if s == "LeakyIntegratorNeuron":
+        if neuron_name == "LeakyIntegratorNeuron":
             self.nui.tabWidget.setTabEnabled(2, False)
         else:
             self.nui.tabWidget.setTabEnabled(2, True)
@@ -308,7 +315,7 @@ class PopulationInfo(QWidget):
         the parameters and rates are actually the members of population, so they should be save and read from
         currentData
         """
-        if s == "PoissonNeuron":
+        if neuron_name == "PoissonNeuron":
             self.nui.tabWidget.setTabEnabled(3, True)
             self.nui.plainTextEdit_parameters.setPlainText(self.currentData.get("parameters"))
             self.nui.plainTextEdit_rates.setPlainText(self.currentData.get("rates"))
@@ -319,11 +326,11 @@ class PopulationInfo(QWidget):
 
 
 class ProjectionInfo(QWidget):
-    sig_synapse = pyqtSignal(dict, list)  # synchronize the synapse list of each projection
+    sig_synapse = pyqtSignal(dict)  # synchronize the synapse list of each projection
 
     # sig_connector = pyqtSignal(list, QObject)
 
-    def __init__(self, source=None, dest=None, synapsedict=None, synapselist=None, connectorlist=None):
+    def __init__(self, source=None, dest=None, synapsedict=None):
         super(ProjectionInfo, self).__init__()
         self.ui = Projection_Information.Ui_Form()
         self.ui.setupUi(self)
@@ -375,7 +382,7 @@ class ProjectionInfo(QWidget):
         self.connector_ui = Connector_Definition.Ui_Dialog()
         self.connector_ui.setupUi(self.connector_dialog)
 
-        self.synchronizeDict(synapsedict, synapselist)
+        self.synchronizeDict(synapsedict)
         self.synchronizeConnector()
         self.ui.comboBox_synapse_type.setCurrentIndex(
                 self.ui.comboBox_synapse_type.findText(self.currentData.get("synapse")))
@@ -385,23 +392,21 @@ class ProjectionInfo(QWidget):
 
         """ui"""
         self.ui.comboBox_synapse_type.activated[QString].connect(self.openSynapseDefinition)
+        self.ui.comboBox_connector.activated[QString].connect(self.openConnectorDefinition)
         self.ui.lineEdit_name.editingFinished.connect(self.slot_updateName)
         self.ui.lineEdit_target.editingFinished.connect(self.slot_updateTarget)
         self.pre.info.sig_name.connect(self.slot_updatePre)
         self.post.info.sig_name.connect(self.slot_updatePost)
         """synpase ui"""
         self.synapse_ui.comboBox_synapse_type.activated[QString].connect(self.openSynapseDefinition)
+        self.synapse_ui.comboBox_synapse_type.activated.connect(self.ui.comboBox_synapse_type.setCurrentIndex)
         self.synapse_ui.buttonBox.accepted.connect(self.slot_updateSynapse)
         self.synapse_ui.buttonBox.rejected.connect(self.slot_rollback)
-
-        """connect combobox to stackwidget"""
+        """connector ui"""
         self.connector_ui.buttonBox.accepted.connect(self.slot_updateConnector)
         self.connector_ui.buttonBox.rejected.connect(self.slot_rollback)
-        self.ui.comboBox_connector.activated[QString].connect(self.openConnectorDefinition)
-        # self.ui.comboBox_connector.activated.connect(self.connector_ui.comboBox_connector.setCurrentIndex)
         self.connector_ui.comboBox_connector.activated.connect(self.ui.comboBox_connector.setCurrentIndex)
         self.connector_ui.comboBox_connector.activated[QString].connect(self.openConnectorDefinition)
-
         """connect_all_to_all"""
         self.connector_ui.cata_rb_weights.toggled.connect(self.slot_cata_weights)
         self.connector_ui.cata_rb_delays.toggled.connect(self.slot_cata_delays)
@@ -502,11 +507,10 @@ class ProjectionInfo(QWidget):
         self.connector_ui.cff_filename.setText(myDir.dirName())
         self.connector_ui.cff_filepath.setPlainText(myDir.absolutePath())
 
-    def setCurrentSynapse(self, currentSynapse=None):
-        if isinstance(currentSynapse, dict):
-            self.currentSynapse.update(currentSynapse)
+    def setCurrentSynapse(self, currentSynapse=dict):
+        self.currentSynapse.update(currentSynapse)
 
-    def setCurrentData(self, currentData=None):
+    def setCurrentData(self, currentData=dict):
         """
         synchronize currentData
 
@@ -519,8 +523,7 @@ class ProjectionInfo(QWidget):
             "connector": ""
         }
         """
-        if isinstance(currentData, dict):
-            self.currentData.update(currentData)
+        self.currentData.update(currentData)
         self.ui.lineEdit_name.setText(self.currentData.get("name"))
         self.ui.lineEdit_target.setText(self.currentData.get("target"))
         self.ui.comboBox_synapse_type.setCurrentIndex(
@@ -531,7 +534,7 @@ class ProjectionInfo(QWidget):
         self.slot_updatePre(self.currentData.get("pre"))
         self.slot_updatePost(self.currentData.get("post"))
 
-    def setCurrentConnector(self, currentConnector=None):
+    def setCurrentConnector(self, currentConnector=dict):
         """
         + update self.currentConnector
         + write all parametors into widget
@@ -540,8 +543,7 @@ class ProjectionInfo(QWidget):
         :return:
         :rtype:
         """
-        if isinstance(currentConnector, dict):
-            self.currentConnector.update(currentConnector)
+        self.currentConnector.update(currentConnector)
         pageid = self.currentConnector.get("id")
         # connect_all_to_all
         if pageid == "page_cata":
@@ -739,7 +741,7 @@ class ProjectionInfo(QWidget):
         elif pageid == "page_cwf":
             pass
 
-    def synchronizeConnector(self, connectorlist=None):
+    def synchronizeConnector(self, connectorlist=list):
         """
         + synchronize connectorlist if necessary
         :param connectorlist:
@@ -748,7 +750,6 @@ class ProjectionInfo(QWidget):
         :rtype:
         """
         if isinstance(connectorlist, list):
-            del self.connectorlist
             self.connectorlist = connectorlist
         for item in self.connectorlist:
             if self.ui.comboBox_connector.findText(item) == -1:
@@ -757,14 +758,15 @@ class ProjectionInfo(QWidget):
                 self.connector_ui.comboBox_connector.addItem(item)
 
     # add new synapse to list if necessary
-    def synchronizeDict(self, syn=None, sl=None):
-        if isinstance(syn, dict) and isinstance(sl, list):
-            self.synapsedict.update(syn)
-            del self.synapselist
-            self.synapselist = sl
-            for key in self.synapselist:
-                if self.ui.comboBox_synapse_type.findText(key) == -1:
-                    self.ui.comboBox_synapse_type.insertItem(self.ui.comboBox_synapse_type.count(), key)
+    def synchronizeDict(self, syn=dict):
+        self.synapsedict.update(syn)
+        sl = self.synapsedict.keys()
+        sl.sort()
+        for key in sl:
+            if self.ui.comboBox_synapse_type.findText(key) == -1:
+                self.ui.comboBox_synapse_type.insertItem(self.ui.comboBox_synapse_type.count(), key)
+            if self.synapse_ui.comboBox_synapse_type.findText(key) == -1:
+                self.synapse_ui.comboBox_synapse_type.insertItem(self.synapse_ui.comboBox_synapse_type.count(), key)
 
     def slot_rollback(self):
         self.ui.comboBox_synapse_type.setCurrentIndex(
@@ -805,15 +807,12 @@ class ProjectionInfo(QWidget):
 
             self.setCurrentSynapse(tmp)
             self.synapsedict.update({str(synapse_name): self.currentSynapse})
-            # update synapselist
-            if self.synapselist.count(synapse_name) == 0:
-                self.synapselist.append(synapse_name)
             # add a neu type of neuron
-            self.synchronizeDict(self.synapsedict, self.synapselist)
+            self.synchronizeDict(self.synapsedict)
 
             self.ui.comboBox_synapse_type.setCurrentIndex(self.ui.comboBox_synapse_type.findText(synapse_name))
 
-        self.sig_synapse.emit(self.synapsedict, self.synapselist)
+        self.sig_synapse.emit(self.synapsedict)
         self.synapse_dialog.accept()
 
     def slot_updateConnector(self):
@@ -892,8 +891,6 @@ class ProjectionInfo(QWidget):
                     if child.objectName().endsWith("filepath"):
                         self.currentConnector.update({"filepath": str(child.toPlainText())})
 
-        print self.currentConnector
-
     def openConnectorDefinition(self, name):
         """
         open the child widget in self.connector_ui.stackedWidget that has the same name of accessibleName()
@@ -902,24 +899,28 @@ class ProjectionInfo(QWidget):
         :return:
         :rtype:
         """
+        # self.connector_ui.comboBox_connector.setCurrentIndex(self.ui.comboBox_connector.findText(name))
+        # for index in range(self.connector_ui.stackedWidget.count()):
+        #     if self.connector_ui.stackedWidget.widget(index).accessibleName() == name:
+        #         self.connector_ui.stackedWidget.setCurrentIndex(index)
+        index = self.ui.comboBox_connector.findText(name)
+        self.connector_ui.comboBox_connector.setCurrentIndex(index)
+        self.connector_ui.stackedWidget.setCurrentIndex(index)
         self.connector_dialog.show()
-        self.synchronizeConnector()
-        self.connector_ui.comboBox_connector.setCurrentIndex(self.ui.comboBox_connector.findText(name))
-        for index in range(self.connector_ui.stackedWidget.count()):
-            if self.connector_ui.stackedWidget.widget(index).accessibleName() == name:
-                self.connector_ui.stackedWidget.setCurrentIndex(index)
-                return
 
-    def openSynapseDefinition(self, s):
-        # synchronized combobox_synapse first
-        l = [self.ui.comboBox_synapse_type.itemText(index) for index in xrange(self.ui.comboBox_synapse_type.count())]
-        for item in l:
-            if self.synapse_ui.comboBox_synapse_type.findText(item) == -1:
-                self.synapse_ui.comboBox_synapse_type.addItem(item)
-        self.synapse_ui.comboBox_synapse_type.setCurrentIndex(self.synapse_ui.comboBox_synapse_type.findText(s))
+    def openSynapseDefinition(self, syn_name):
+        """open synapse definition-dialog and fill right informations
+
+        :param syn_name:
+        :type syn_name:
+        :return:
+        :rtype:
+        """
+
+        self.synapse_ui.comboBox_synapse_type.setCurrentIndex(self.synapse_ui.comboBox_synapse_type.findText(syn_name))
 
         self.synapse_ui.tabWidget.setCurrentIndex(0)
-        synapse = self.synapsedict.get(str(s))
+        synapse = self.synapsedict.get(str(syn_name))
         if synapse:
             parameters = synapse.get("parameters")
             equations = synapse.get("equations")
@@ -949,7 +950,7 @@ class ProjectionInfo(QWidget):
             self.synapse_ui.lineEdit_name.clear()
             self.synapse_ui.lineEdit_name.setReadOnly(False)
 
-        if s == "None":
+        if syn_name == "None":
             self.synapse_ui.plainTextEdit_parameter.setEnabled(False)
             self.synapse_ui.plainTextEdit_equation.setEnabled(False)
             self.synapse_ui.plainTextEdit_psp.setEnabled(False)

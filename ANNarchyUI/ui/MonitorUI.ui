@@ -33,7 +33,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <widget class="OutputGraphic" name="widget_matplot" native="true"/>
+       <widget class="MyMonitor" name="widget_matplot" native="true"/>
       </item>
      </layout>
     </widget>
@@ -175,9 +175,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>OutputGraphic</class>
+   <class>MyMonitor</class>
    <extends>QWidget</extends>
-   <header location="global">PlotView</header>
+   <header location="global">ANNarchyData</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

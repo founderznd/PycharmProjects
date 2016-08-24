@@ -38,7 +38,7 @@ class Ui_MainWindow(object):
         self.frame.setObjectName(_fromUtf8("frame"))
         self.verticalLayout_4 = QtGui.QVBoxLayout(self.frame)
         self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
-        self.gview_network = NeuralConnectionView(self.frame)
+        self.gview_network = MyView(self.frame)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -128,7 +128,7 @@ class Ui_MainWindow(object):
         self.actionNew.setText(_translate("MainWindow", "New", None))
         self.actionNew.setShortcut(_translate("MainWindow", "Ctrl+N", None))
 
-from ConnectionView import NeuralConnectionView
+from ConnectionView import MyView
 
 if __name__ == "__main__":
     import sys

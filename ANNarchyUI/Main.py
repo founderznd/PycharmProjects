@@ -2,18 +2,20 @@
 # main function
 import ast
 import json
+from pylab import *
 
 import ANNarchy
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+import ANNarchyData
 import ConnectionView
 from ui import NeuronUI, Simulation_Definition
 
-from pylab import *
-
 
 class MainWindow(QMainWindow):
+    sig_populations = pyqtSignal(ANNarchyData.MyPopulations, ANNarchyData.MyProjections)
+
     def __init__(self):
         super(MainWindow, self).__init__()
         self.ui = NeuronUI.Ui_MainWindow()
@@ -21,13 +23,19 @@ class MainWindow(QMainWindow):
 
         self.file = QFile()
         self.filename = QString()
+        self.isSimulated = False
+
+        # annarchy object
+        self.neurons = ANNarchyData.MyNeurons()
+        self.synapses = ANNarchyData.MySynapses()
+        self.populations = ANNarchyData.MyPopulations()
+        self.projections = ANNarchyData.MyProjections()
+
         # saved data
         self.saved_data = {
             "Populations": [],
             "Projections": [],
-            "neuronlist": [],
-            "synapselist": [],
-            "neurondict": {},
+            "neurondict" : {},
             "synapsedict": {}
         }
 
@@ -64,11 +72,11 @@ class MainWindow(QMainWindow):
         ) -> QMessageBox.StandardButton
         """
         button = QMessageBox().question(
-            self,
-            "Warning!",
-            "Do you want to save this file before create a new one?",
-            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
-            QMessageBox.Yes
+                self,
+                "Warning!",
+                "Do you want to save this file before create a new one?",
+                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+                QMessageBox.Yes
         )
         if button == QMessageBox.Cancel:
             return
@@ -96,10 +104,10 @@ class MainWindow(QMainWindow):
             ) -> QString
             """
             self.filename = QFileDialog().getSaveFileName(
-                self,
-                "save file",
-                QDir().currentPath() + "/save",
-                "*.save;;*.*"
+                    self,
+                    "save file",
+                    QDir().currentPath() + "/save",
+                    "*.save;;*.*"
             )
             if not self.filename:
                 return
@@ -119,7 +127,7 @@ class MainWindow(QMainWindow):
         self.filename = ""
         self.slot_actionSave()
 
-    def create_JSON_Object(self, data = None):
+    def create_JSON_Object(self, data=None):
         """
         encode data to a json string and return it
 
@@ -141,25 +149,21 @@ class MainWindow(QMainWindow):
         pops = list()
         projs = list()
         for item in self.scene.items():
-            if item.type == ConnectionView.ItemType.POPULATION:
+            if isinstance(item, ConnectionView.Population):
                 pops.append((item.x(), item.y(), item.info.currentData, item.info.currentMonitor))
-            if item.type == ConnectionView.ItemType.PROJECTION:
+            if isinstance(item, ConnectionView.Projection):
                 projs.append(
-                    (
-                        item.sourcePoint.x(), item.sourcePoint.y(),
-                        item.destPoint.x(), item.destPoint.y(),
-                        item.info.currentData, item.info.currentConnector
-                    )
+                        (
+                            item.sourcePoint.x(), item.sourcePoint.y(),
+                            item.destPoint.x(), item.destPoint.y(),
+                            item.info.currentData, item.info.currentConnector
+                        )
                 )
         self.saved_data.update({"Populations": pops})
         self.saved_data.update({"Projections": projs})
 
-        # convert list<QString> to list<string>
-        self.saved_data.update({"neuronlist": [str(item) for item in self.scene.neuronlist]})
-        self.saved_data.update({"synapselist": [str(item) for item in self.scene.synapselist]})
-
-        self.saved_data.update({"neurondict": self.scene.neurondict})
-        self.saved_data.update({"synapsedict": self.scene.synapsedict})
+        self.saved_data.update({"neurondict": self.scene.data.neurons})
+        self.saved_data.update({"synapsedict": self.scene.data.synapses})
 
         _json_encoder = json.dumps(self.saved_data)
         return _json_encoder
@@ -196,10 +200,8 @@ class MainWindow(QMainWindow):
 
             self.scene.clear()
 
-            self.scene.neuronlist = [QString(item) for item in self.saved_data.get("neuronlist")]
-            self.scene.synapselist = [QString(item) for item in self.saved_data.get("synapselist")]
-            self.scene.neurondict.update(self.saved_data.get("neurondict"))
-            self.scene.synapsedict.update(self.saved_data.get("synapsedict"))
+            self.scene.data.neurons.update(self.saved_data.get("neurondict"))
+            self.scene.data.synapses.update(self.saved_data.get("synapsedict"))
 
             try:
                 pops = self.saved_data.get("Populations")
@@ -213,7 +215,8 @@ class MainWindow(QMainWindow):
                     info = self.scene.addPopulation(QPointF(item[0], item[1]))
                     info.setCurrentData(item[2])
                     info.setCurrentMonitor(item[3])
-                    info.setCurrentNeuron(self.scene.neurondict.get(info.currentData.get("neuron")))
+                    info.setCurrentNeuron(self.scene.data.neurons.get(info.currentData.get("neuron")))
+
             except IndexError:
                 print IndexError, " in Populations"
 
@@ -233,7 +236,7 @@ class MainWindow(QMainWindow):
                     info = self.scene.addProjection(source, dest)
                     info.setCurrentData(item[4])
                     info.setCurrentConnector(item[5])
-                    info.setCurrentSynapse(self.scene.synapsedict.get(info.currentData.get("synapse")))
+                    info.setCurrentSynapse(self.scene.data.synapses.get(info.currentData.get("synapse")))
             except IndexError:
                 print IndexError, " in Projections"
 
@@ -257,10 +260,10 @@ class MainWindow(QMainWindow):
         :return:
         :rtype:
         """
-        annarchy_neurons = []
-        annarchy_synapses = []
-        annarchy_populations = []
-        annarchy_projections = []
+        if self.isSimulated:
+            print "already simulated"
+            return
+
         """check all inputs"""
         if not self.checkAllSignals():
             QMessageBox().information(self, "information", "please check your input:\n" + self.error_input)
@@ -273,14 +276,14 @@ class MainWindow(QMainWindow):
                     # convert QString to Tuple
                     geo_tuple = ast.literal_eval(item.info.currentData.get("geometry"))
                     pop = ANNarchy.PoissonPopulation(
-                        geo_tuple,
-                        item.info.currentData.get("name"),
-                        item.info.currentData.get("rates"),
-                        item.info.currentData.get("target"),
-                        item.info.currentData.get("parameters"),
-                        item.info.currentData.get("refractory")
+                            geo_tuple,
+                            item.info.currentData.get("name"),
+                            item.info.currentData.get("rates"),
+                            item.info.currentData.get("target"),
+                            item.info.currentData.get("parameters"),
+                            item.info.currentData.get("refractory")
                     )
-                    annarchy_populations.append(pop)
+                    self.populations.addPopulation(pop)
                 else:
                     """
                       *Parameters*:
@@ -294,24 +297,24 @@ class MainWindow(QMainWindow):
                           * **description**: short description of the neuron type (used for reporting).
                       """
                     neuron = ANNarchy.Neuron(
-                        item.info.currentNeuron.get("parameters"),
-                        item.info.currentNeuron.get("equations"),
-                        item.info.currentNeuron.get("spike"),
-                        item.info.currentNeuron.get("reset"),
-                        item.info.currentNeuron.get("refractory"),
-                        item.info.currentNeuron.get("functions"),
-                        item.info.currentNeuron.get("name"),
-                        item.info.currentNeuron.get("description"),
+                            item.info.currentNeuron.get("parameters"),
+                            item.info.currentNeuron.get("equations"),
+                            item.info.currentNeuron.get("spike"),
+                            item.info.currentNeuron.get("reset"),
+                            item.info.currentNeuron.get("refractory"),
+                            item.info.currentNeuron.get("functions"),
+                            item.info.currentNeuron.get("name"),
+                            item.info.currentNeuron.get("description"),
                     )
-                    annarchy_neurons.append(neuron)
+                    self.neurons.addNeuron(neuron)
 
                     pop = ANNarchy.Population(
-                        ast.literal_eval(item.info.currentData.get("geometry")),
-                        neuron,
-                        item.info.currentData.get("name"),
-                        None
+                            ast.literal_eval(item.info.currentData.get("geometry")),
+                            neuron,
+                            item.info.currentData.get("name"),
+                            None
                     )
-                    annarchy_populations.append(pop)
+                    self.populations.addPopulation(pop)
 
         for item in self.scene.items():
             """create projection and its synapse"""
@@ -330,21 +333,23 @@ class MainWindow(QMainWindow):
                     * **name**: name of the synapse type (used for reporting only).
                     * **description**: short description of the synapse type (used for reporting).
                 """
-                # synapse = ANNarchy.Synapse(
-                #         item.info.currentSynapse.get("parameters"),
-                #         item.info.currentSynapse.get("equations"),
-                #         item.info.currentSynapse.get("psp"),
-                #         "sum",
-                #         item.info.currentSynapse.get("pre_spike"),
-                #         item.info.currentSynapse.get("post_spike"),
-                #         item.info.currentSynapse.get("functions"),
-                #         None,
-                #         None,
-                #         item.info.currentSynapse.get("name"),
-                #         item.info.currentSynapse.get("description")
-                # )
-                synapse = ANNarchy.STDP(tau_plus=20.0, tau_minus=20.0, A_plus=0.01, A_minus=0.0105, w_max=0.01)
-                annarchy_synapses.append(synapse)
+                synapse = ANNarchy.Synapse(
+                        parameters=item.info.currentSynapse.get("parameters"),
+                        equations=item.info.currentSynapse.get("equations"),
+                        psp=item.info.currentSynapse.get("psp"),
+                        operation="sum",
+                        pre_spike=item.info.currentSynapse.get("pre_spike"),
+                        post_spike=item.info.currentSynapse.get("post_spike"),
+                        functions=item.info.currentSynapse.get("functions"),
+                        pruning=None,
+                        creating=None,
+                        name=item.info.currentSynapse.get("name"),
+                        description=item.info.currentSynapse.get("description"),
+                        extra_values={}
+                )
+                # synapse = ANNarchy.STDP(tau_plus=20.0, tau_minus=20.0, A_plus=0.01, A_minus=0.0105, w_max=0.01)
+                # synapse = ANNarchy.STDP()
+                self.synapses.addSynapse(synapse)
                 """
                 *Parameters*:
                     * **pre**: pre-synaptic population (either its name or a ``Population`` object).
@@ -358,14 +363,15 @@ class MainWindow(QMainWindow):
                     * For rate-coded populations: ``psp = w * pre.r``
                     * For spiking populations: ``g_target += w``
                 """
+                print "proj name: ", item.info.currentData.get("name")
                 proj = ANNarchy.Projection(
-                    item.info.currentData.get("pre"),
-                    item.info.currentData.get("post"),
-                    item.info.currentData.get("target"),
-                    synapse,
-                    item.info.currentData.get("name"),
+                        pre=item.info.currentData.get("pre"),
+                        post=item.info.currentData.get("post"),
+                        target=item.info.currentData.get("target"),
+                        synapse=synapse,
+                        name=item.info.currentData.get("name")
                 )
-                annarchy_projections.append(proj)
+                self.projections.addProjection(proj)
                 """set connector"""
                 connector = item.info.currentConnector
                 if connector.get("id") == "page_cata":
@@ -385,28 +391,26 @@ class MainWindow(QMainWindow):
 
         ANNarchy.core.Global.config['verbose'] = True
         # compile
-        ANNarchy.compile(debug_build = True)
+        ANNarchy.compile(debug_build=True)
 
-        Mo = None
-        Mo = ANNarchy.Monitor(annarchy_populations[1], 'spike')
+        # Mi = ANNarchy.Monitor(self.populations.getPopulation("Input"), 'spike')
+        # Mo = ANNarchy.Monitor(self.populations.getPopulation("Output"), 'spike')
+
+        self.sig_populations.emit(self.populations, self.projections)
+
+        """just for test"""
+        for item in self.scene.items():
+            if isinstance(item, ConnectionView.Population):
+                item.info.slot_create_monitor(self.populations, self.projections)
 
         # self.simulation_dialog.show()
-        ANNarchy.simulate(1000, measure_time = True)
+        ANNarchy.simulate(10000, measure_time=True)
 
-        # here use monitor
-        output_spikes = Mo.get('spike')
-        output_rate = Mo.smoothed_rate(output_spikes, 100.0)
-        weights = annarchy_projections[0].w[0]
-        subplot(3, 1, 1)
-        plot(output_rate[0, :])
-        subplot(3, 1, 2)
-        plot(weights, '.')
-        subplot(3, 1, 3)
-        hist(weights, bins = 20)
-        show()
+        self.isSimulated = True
 
     def checkAllSignals(self):
         isAllRight = True
+        self.error_input.clear()
         for item in self.scene.items():
             """population"""
             if isinstance(item, ConnectionView.Population):
@@ -428,7 +432,7 @@ class MainWindow(QMainWindow):
                     if data == "":
                         # print  "Population: ", item.info.currentData.get("name"), " has no variables"
                         self.error_input.append(
-                            "Population: " + item.info.currentData.get("name") + " has no variables\n")
+                                "Population: " + item.info.currentData.get("name") + " has no variables\n")
                         isAllRight = False
             """projection"""
             if isinstance(item, ConnectionView.Projection):
