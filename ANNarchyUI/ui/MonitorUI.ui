@@ -150,6 +150,20 @@
           </spacer>
          </item>
          <item>
+          <widget class="QPushButton" name="pushButton_SingleNeuron">
+           <property name="text">
+            <string>Select Neuron</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton">
+           <property name="text">
+            <string>Select Sequence</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="pushButton_monitor">
            <property name="minimumSize">
             <size>

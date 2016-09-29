@@ -85,6 +85,12 @@ class Ui_Dialog(object):
         self.verticalLayout_4.addLayout(self.verticalLayout)
         spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout_4.addItem(spacerItem1)
+        self.pushButton_SingleNeuron = QtGui.QPushButton(self.groupBox_monitor)
+        self.pushButton_SingleNeuron.setObjectName(_fromUtf8("pushButton_SingleNeuron"))
+        self.verticalLayout_4.addWidget(self.pushButton_SingleNeuron)
+        self.pushButton = QtGui.QPushButton(self.groupBox_monitor)
+        self.pushButton.setObjectName(_fromUtf8("pushButton"))
+        self.verticalLayout_4.addWidget(self.pushButton)
         self.pushButton_monitor = QtGui.QPushButton(self.groupBox_monitor)
         self.pushButton_monitor.setMinimumSize(QtCore.QSize(145, 50))
         self.pushButton_monitor.setDefault(False)
@@ -102,6 +108,8 @@ class Ui_Dialog(object):
         self.label_7.setText(_translate("Dialog", "start:", None))
         self.label_6.setText(_translate("Dialog", "period:", None))
         self.label_8.setText(_translate("Dialog", "variables:", None))
+        self.pushButton_SingleNeuron.setText(_translate("Dialog", "Select Neuron", None))
+        self.pushButton.setText(_translate("Dialog", "Select Sequence", None))
         self.pushButton_monitor.setText(_translate("Dialog", "Monitor", None))
 
 from ANNarchyData import MyMonitor

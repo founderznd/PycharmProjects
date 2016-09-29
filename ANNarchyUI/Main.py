@@ -1,4 +1,5 @@
 # coding:utf-8
+# defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION"
 # main function
 import ast
 import json
@@ -10,7 +11,7 @@ from PyQt4.QtGui import *
 
 import ANNarchyData
 import ConnectionView
-from ui import NeuronUI, Simulation_Definition
+from ui import NeuronUI,Simulation_Definition
 
 
 class MainWindow(QMainWindow):
@@ -257,6 +258,7 @@ class MainWindow(QMainWindow):
         + 10 monitor
         + 11 simulate
         + 12 plot()
+
         :return:
         :rtype:
         """
@@ -307,6 +309,7 @@ class MainWindow(QMainWindow):
                             item.info.currentNeuron.get("description"),
                     )
                     self.neurons.addNeuron(neuron)
+                    print "neuron name: ", item.info.currentNeuron.get("name")
 
                     pop = ANNarchy.Population(
                             ast.literal_eval(item.info.currentData.get("geometry")),
@@ -315,6 +318,7 @@ class MainWindow(QMainWindow):
                             None
                     )
                     self.populations.addPopulation(pop)
+                    print "Population name: ", item.info.currentData.get("name")
 
         for item in self.scene.items():
             """create projection and its synapse"""
@@ -334,22 +338,23 @@ class MainWindow(QMainWindow):
                     * **description**: short description of the synapse type (used for reporting).
                 """
                 synapse = ANNarchy.Synapse(
-                        parameters=item.info.currentSynapse.get("parameters"),
-                        equations=item.info.currentSynapse.get("equations"),
-                        psp=item.info.currentSynapse.get("psp"),
+                        parameters=str(item.info.currentSynapse.get("parameters")),
+                        equations=str(item.info.currentSynapse.get("equations")),
+                        psp=str(item.info.currentSynapse.get("psp")),
                         operation="sum",
-                        pre_spike=item.info.currentSynapse.get("pre_spike"),
-                        post_spike=item.info.currentSynapse.get("post_spike"),
-                        functions=item.info.currentSynapse.get("functions"),
+                        pre_spike=str(item.info.currentSynapse.get("pre_spike")),
+                        post_spike=str(item.info.currentSynapse.get("post_spike")),
+                        functions=str(item.info.currentSynapse.get("functions")),
                         pruning=None,
                         creating=None,
-                        name=item.info.currentSynapse.get("name"),
-                        description=item.info.currentSynapse.get("description"),
+                        name=str(item.info.currentSynapse.get("name")),
+                        description=str(item.info.currentSynapse.get("description")),
                         extra_values={}
                 )
                 # synapse = ANNarchy.STDP(tau_plus=20.0, tau_minus=20.0, A_plus=0.01, A_minus=0.0105, w_max=0.01)
                 # synapse = ANNarchy.STDP()
                 self.synapses.addSynapse(synapse)
+                print "synapse name: ", item.info.currentSynapse.get("name")
                 """
                 *Parameters*:
                     * **pre**: pre-synaptic population (either its name or a ``Population`` object).
@@ -363,15 +368,15 @@ class MainWindow(QMainWindow):
                     * For rate-coded populations: ``psp = w * pre.r``
                     * For spiking populations: ``g_target += w``
                 """
-                print "proj name: ", item.info.currentData.get("name")
                 proj = ANNarchy.Projection(
-                        pre=item.info.currentData.get("pre"),
-                        post=item.info.currentData.get("post"),
-                        target=item.info.currentData.get("target"),
+                        pre=str(item.info.currentData.get("pre")),
+                        post=str(item.info.currentData.get("post")),
+                        target=str(item.info.currentData.get("target")),
                         synapse=synapse,
                         name=item.info.currentData.get("name")
                 )
                 self.projections.addProjection(proj)
+                print "proj name: ", item.info.currentData.get("name")
                 """set connector"""
                 connector = item.info.currentConnector
                 if connector.get("id") == "page_cata":

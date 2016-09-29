@@ -27,7 +27,7 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
-          <widget class="NeuralConnectionView" name="gview_network">
+          <widget class="MyView" name="gview_network">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -160,7 +160,15 @@
     <addaction name="actionSave_as"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menuDefine">
+    <property name="title">
+     <string>Define</string>
+    </property>
+    <addaction name="actionNew_Neuron_2"/>
+    <addaction name="actionNew_Synapse"/>
+   </widget>
    <addaction name="menuSave"/>
+   <addaction name="menuDefine"/>
   </widget>
   <action name="actionOpen">
    <property name="icon">
@@ -215,10 +223,30 @@
     <string>Monitor</string>
    </property>
   </action>
+  <action name="actionNew_Neuron">
+   <property name="text">
+    <string>Neuron</string>
+   </property>
+  </action>
+  <action name="actionSynapse">
+   <property name="text">
+    <string>Synapse</string>
+   </property>
+  </action>
+  <action name="actionNew_Neuron_2">
+   <property name="text">
+    <string>new Neuron</string>
+   </property>
+  </action>
+  <action name="actionNew_Synapse">
+   <property name="text">
+    <string>new Synapse</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>NeuralConnectionView</class>
+   <class>MyView</class>
    <extends>QGraphicsView</extends>
    <header>ConnectionView</header>
    <slots>

@@ -140,9 +140,12 @@ class MyView(QGraphicsView):
         self.dragdrop_button.setToolTip("swith drag mode")
 
         self.layout.addWidget(self.population_button, 0, 0)
-        self.layout.addWidget(self.centerOn_button, 0, 1)
-        self.layout.addWidget(self.dragdrop_button, 1, 0)
+        self.layout.addWidget(self.centerOn_button, 0, 2)
+        self.layout.addWidget(self.dragdrop_button, 0, 4)
+
+        # self.layout.setRowStretch(1,1)
         self.layout.setRowStretch(self.layout.rowCount(), 1)
+        self.layout.setColumnStretch(1,1)
         self.layout.setColumnStretch(self.layout.columnCount(), 1)
 
         self.connect(self.centerOn_button, SIGNAL("clicked()"), self.slot_centerOn)
